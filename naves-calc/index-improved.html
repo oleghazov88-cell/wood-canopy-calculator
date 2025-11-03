@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор навесов - Улучшенная версия</title>
+    
+    <!-- Локальные библиотеки Three.js -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "./assets/libs/three/three.module.min.js",
+        "three/addons/": "./assets/libs/three/"
+      }
+    }
+    </script>
+    
+    <link rel="stylesheet" href="assets/css/naves-calc.css">
+    
+    <!-- Подключаем новые модули -->
+    <script src="assets/js/storage-manager.js"></script>
+    <script src="assets/js/pdf-export.js"></script>
+    <script src="assets/js/order-manager.js"></script>
+    
+    <style>
+        /* Дополнительные стили для улучшенной версии */
+        :root {
+            --primary-color: #20B5B9;
+            --secondary-color: #FF6B6B;
+            --text-dark: #2c3e50;
+            --bg-light: #f8f9fa;
+            --border-radius: 20px;
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1a9296 100%);
+            color: white;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .app-header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .app-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .saved-calcs-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.2);
+            transition: right 0.3s;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .saved-calcs-panel.active {
+            right: 0;
+        }
+
+        .saved-calcs-header {
+            padding: 20px;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .saved-calcs-header h3 {
+            margin: 0;
+        }
+
+        .close-panel {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .saved-calcs-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .saved-calc-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .saved-calc-item:hover {
+            background: #e9ecef;
+            transform: translateX(-5px);
+        }
+
+        .saved-calc-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .saved-calc-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .saved-calc-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .saved-calc-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-load {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .theme-switcher {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .theme-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Тёмная тема */
+        body.dark-theme {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        body.dark-theme .app-container {
+            background: #0f3460;
+            color: #e9ecef;
+        }
+
+        body.dark-theme .app-header {
+            background: linear-gradient(135deg, #533483 0%, #4a2c6d 100%);
+        }
+
+        @media (max-width: 768px) {
+            .app-header {
+                padding: 20px;
+            }
+
+            .app-header h1 {
+                font-size: 24px;
+            }
+
+            .saved-calcs-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-btn {
+                flex: 1;
+                text-align: center;
+            }
+        }
+
+        /* Стили для модального окна истории */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 9998;
+            display: none;
+        }
+
+        .modal-overlay.active {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div>
+                <h1>🏠 Калькулятор навесов</h1>
+                <p>Профессиональный расчет с 3D визуализацией</p>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" onclick="showSavedCalculations()">
+                    📂 История расчетов
+                </button>
+                <button class="header-btn" onclick="exportToPDF()">
+                    📄 Экспорт в PDF
+                </button>
+                <a href="admin.html" class="header-btn" target="_blank">
+                    ⚙️ Админ-панель
+                </a>
+            </div>
+        </header>
+
+        <div class="naves-calc">
+            <section id="nc-form"></section>
+            <section class="naves-calc__view">
+                <canvas id="nc-canvas"></canvas>
+                <div id="nc-summary"></div>
+                
+                <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="makeOrder()" style="flex: 1;">
+                        🛒 Сделать заказ
+                    </button>
+                    <button class="btn btn-success" onclick="saveCalculation()" style="flex: 1;">
+                        💾 Сохранить расчет
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Панель сохраненных расчетов -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeSavedCalculations()"></div>
+    <div class="saved-calcs-panel" id="savedCalcsPanel">
+        <div class="saved-calcs-header">
+            <h3>📂 История расчетов</h3>
+            <button class="close-panel" onclick="closeSavedCalculations()">✕</button>
+        </div>
+        <div class="saved-calcs-body" id="savedCalcsBody">
+            <div class="empty-state">
+                <p>Нет сохраненных расчетов</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопка переключения темы -->
+    <div class="theme-switcher">
+        <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    </div>
+
+    <script type="module" src="assets/js/naves-calc.bundle.js"></script>
+    <script>
+        // Инициализация менеджеров
+        const storageManager = new StorageManager();
+        const pdfExporter = new PDFExporter();
+        const orderManager = new OrderManager();
+
+        // Инициализация калькулятора
+        window.addEventListener('DOMContentLoaded', () => {
+            window.NavesCalc.init('#nc-form', '#nc-canvas', '#nc-summary');
+            loadTheme();
+        });
+
+        // === ФУНКЦИИ СОХРАНЕНИЯ ===
+        function saveCalculation() {
+            if (!window.NavesCalc || !window.NavesCalc.params) {
+                alert('Калькулятор не готов');
+                return;
+            }
+
+            const name = prompt('Введите название расчета:', 
+                `Расчет от ${new Date().toLocaleString('ru-RU')}`);
+            
+            if (!name) return;
+
+            const calculationData = {
+                params: window.NavesCalc.params,
+                totalPrice: document.getElementById('totalPrice')?.textContent || 'N/A',
+                timestamp: Date.now()
+            };
+
+            const id = storageManager.saveCalculation(calculationData, name);
+            
+            if (id) {
+                showNotification('✅ Расчет сохранен!', 'success');
+            }
+        }
+
+        function showSavedCalculations() {
+            const panel = document.getElementById('savedCalcsPanel');
+            const overlay = document.getElementById('modalOverlay');
+            const body = document.getElementById('savedCalcsBody');
+            
+            const calculations = storageManager.getAllCalculations();
+            
+            if (calculations.length === 0) {
+                body.innerHTML = '<div class="empty-state"><p>📭 Нет сохраненных расчетов</p></div>';
+            } else {
+                body.innerHTML = calculations.map(calc => `
+                    <div class="saved-calc-item">
+                        <div class="saved-calc-name">${calc.name}</div>
+                        <div class="saved-calc-date">
+                            ${new Date(calc.timestamp).toLocaleString('ru-RU')}
+                        </div>
+                        <div class="saved-calc-price" style="color: #20B5B9; font-weight: 600; margin-top: 5px;">
+                            ${calc.data.totalPrice}
+                        </div>
+                        <div class="saved-calc-actions">
+                            <button class="saved-calc-btn btn-load" onclick="loadCalculation('${calc.id}')">
+                                Загрузить
+                            </button>
+                            <button class="saved-calc-btn btn-delete" onclick="deleteCalculation('${calc.id}')">
+                                Удалить
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            panel.classList.add('active');
+            overlay.classList.add('active');
+        }
+
+        function closeSavedCalculations() {
+            document.getElementById('savedCalcsPanel').classList.remove('active');
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        function loadCalculation(id) {
+            const data = storageManager.loadCalculation(id);
+            if (data && window.NavesCalc) {
+                // Применяем сохраненные параметры
+                Object.assign(window.NavesCalc.params, data.params);
+                window.NavesCalc.update3DModel();
+                window.NavesCalc.calculateTotal();
+                
+                closeSavedCalculations();
+                showNotification('✅ Расчет загружен!', 'success');
+            }
+        }
+
+        function deleteCalculation(id) {
+            if (confirm('Удалить этот расчет?')) {
+                storageManager.deleteCalculation(id);
+                showSavedCalculations(); // Обновляем список
+                showNotification('🗑️ Расчет удален', 'success');
+            }
+        }
+
+        // === ФУНКЦИИ ЗАКАЗА ===
+        function makeOrder() {
+            if (!window.NavesCalc || !window.NavesCalc.params) {
+                alert('Калькулятор не готов');
+                return;
+            }
+
+            const calculationData = {
+                roofType: window.NavesCalc.params.roofType || 'Не указан',
+                length: window.NavesCalc.params.length || 0,
+                width: window.NavesCalc.params.width || 0,
+                area: ((window.NavesCalc.params.length || 0) * (window.NavesCalc.params.width || 0)).toFixed(2),
+                totalPrice: document.getElementById('totalPrice')?.textContent || 'N/A',
+                params: window.NavesCalc.params
+            };
+
+            const form = orderManager.createOrderForm(calculationData);
+            document.body.appendChild(form);
+        }
+
+        // === ЭКСПОРТ В PDF ===
+        async function exportToPDF() {
+            if (!window.NavesCalc || !window.NavesCalc.params) {
+                alert('Калькулятор не готов');
+                return;
+            }
+
+            showNotification('📄 Подготовка PDF...', 'info');
+
+            const data = {
+                roofType: window.NavesCalc.params.roofType || 'N/A',
+                frameMaterial: window.NavesCalc.params.frameMaterial || 'N/A',
+                roofingMaterial: window.NavesCalc.params.roofingMaterial || 'N/A',
+                roofColor: window.NavesCalc.params.roofColor || 'N/A',
+                area: ((window.NavesCalc.params.length || 0) * (window.NavesCalc.params.width || 0)).toFixed(2),
+                width: window.NavesCalc.params.width || 'N/A',
+                length: window.NavesCalc.params.length || 'N/A',
+                height: window.NavesCalc.params.height || 'N/A',
+                postsCount: window.NavesCalc.params.postsCount || 'N/A',
+                postMaterial: window.NavesCalc.params.postMaterial || 'N/A',
+                postSection: window.NavesCalc.params.postSection || 'N/A',
+                trussCount: window.NavesCalc.params.trussCount || 'N/A',
+                trussMaterial: window.NavesCalc.params.trussMaterial || 'N/A',
+                trussSpacing: window.NavesCalc.params.trussSpacing || 'N/A',
+                totalPrice: document.getElementById('totalPrice')?.textContent || 'N/A'
+            };
+
+            try {
+                await pdfExporter.exportToPDF(data, `specification-${Date.now()}.pdf`);
+                showNotification('✅ PDF создан!', 'success');
+            } catch (error) {
+                showNotification('❌ Ошибка создания PDF', 'error');
+            }
+        }
+
+        // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('themeBtn');
+            
+            body.classList.toggle('dark-theme');
+            
+            if (body.classList.contains('dark-theme')) {
+                btn.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                btn.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        function loadTheme() {
+            const theme = localStorage.getItem('theme');
+            const btn = document.getElementById('themeBtn');
+            
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+                btn.textContent = '☀️';
+            }
+        }
+
+        // === УВЕДОМЛЕНИЯ ===
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+                color: white;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 10001;
+                animation: slideIn 0.3s ease;
+                font-weight: 600;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // CSS анимации
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
+

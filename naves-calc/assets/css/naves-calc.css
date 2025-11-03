@@ -1,0 +1,931 @@
+/* Калькулятор навесов - Автономная версия */
+
+/* CSS переменные */
+:root {
+    /* Цвета */
+    --nc-primary: #20B5B9;
+    --nc-secondary: #FF6B6B;
+    --nc-text-dark: #2c3e50;
+    --nc-text-light: #3E414A;
+    --nc-bg-light: #f8f9fa;
+    --nc-bg-white: #ffffff;
+    --nc-border: #e9ecef;
+    --nc-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    --nc-shadow-hover: 0 15px 40px rgba(0,0,0,0.15);
+    
+    /* Размеры */
+    --nc-padding: 35px;
+    --nc-radius: 20px;
+    --nc-radius-sm: 10px;
+    --nc-gap-lg: 40px;
+    --nc-gap-md: 20px;
+    --nc-gap-sm: 15px;
+    
+    /* Типографика */
+    --nc-font-primary: "Manrope", "Open Sans", Arial, sans-serif;
+    --nc-font-heading: "Unbounded", "Open Sans", Arial, sans-serif;
+    --nc-text-xs: 12px;
+    --nc-text-sm: 14px;
+    --nc-text-base: 16px;
+    --nc-text-lg: 18px;
+    --nc-text-xl: 20px;
+    --nc-text-2xl: 24px;
+    --nc-text-3xl: 30px;
+    --nc-text-4xl: 36px;
+}
+
+/* Сброс стилей для body */
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--nc-bg-white);
+    font-family: var(--nc-font-primary);
+}
+
+/* Обертка для всего контента */
+.naves-calc-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--nc-gap-lg);
+    box-sizing: border-box;
+    min-height: 100vh;
+}
+
+/* Базовые стили */
+.naves-calc {
+    font-family: var(--nc-font-primary);
+    color: var(--nc-text-light);
+    line-height: 1.6;
+    font-size: var(--nc-text-base);
+    display: flex;
+    background: var(--nc-bg-white);
+    gap: var(--nc-gap-lg);
+    box-sizing: border-box;
+    margin-bottom: 60px;
+}
+
+.naves-calc * {
+    box-sizing: border-box;
+}
+
+/* Форма параметров */
+#nc-form {
+    flex: 0 0 40%;
+    min-width: 450px;
+    max-width: 700px;
+    background: var(--nc-bg-white);
+    border-radius: var(--nc-radius);
+    padding: var(--nc-padding);
+    box-shadow: var(--nc-shadow);
+    border: 1px solid var(--nc-border);
+    height: fit-content;
+    transition: box-shadow 0.3s ease;
+}
+
+#nc-form:hover {
+    box-shadow: var(--nc-shadow-hover);
+}
+
+/* Правая панель с 3D и сводкой */
+.naves-calc__view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 600px;
+    background: var(--nc-bg-white);
+    border-radius: var(--nc-radius);
+    padding: var(--nc-padding);
+    box-shadow: var(--nc-shadow);
+    border: 1px solid var(--nc-border);
+    transition: box-shadow 0.3s ease;
+}
+
+.naves-calc__view:hover {
+    box-shadow: var(--nc-shadow-hover);
+}
+
+/* 3D Canvas */
+#nc-canvas {
+    flex: 1;
+    min-height: 500px;
+    border-radius: var(--nc-radius-sm);
+    background: var(--nc-bg-light);
+    margin-bottom: var(--nc-gap-md);
+    display: block;
+    width: 100%;
+}
+
+/* Сводка */
+#nc-summary {
+    background: var(--nc-bg-light);
+    border-radius: var(--nc-radius-sm);
+    padding: var(--nc-gap-md);
+    min-height: 200px;
+}
+
+/* Заголовки */
+.nc-heading {
+    font-family: var(--nc-font-heading);
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--nc-text-dark);
+    margin-bottom: var(--nc-gap-md);
+}
+
+.nc-heading--lg {
+    font-size: var(--nc-text-4xl);
+    margin-bottom: var(--nc-gap-lg);
+}
+
+.nc-heading--md {
+    font-size: var(--nc-text-2xl);
+}
+
+.nc-heading--sm {
+    font-size: var(--nc-text-lg);
+}
+
+/* Поля формы */
+.nc-field {
+    margin-bottom: var(--nc-gap-md);
+}
+
+.nc-field__label {
+    display: block;
+    font-weight: 600;
+    font-size: var(--nc-text-lg);
+    color: var(--nc-text-dark);
+    margin-bottom: var(--nc-gap-sm);
+    text-transform: uppercase;
+}
+
+.nc-field__input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--nc-border);
+    border-radius: var(--nc-radius-sm);
+    font-size: var(--nc-text-base);
+    transition: all 0.3s ease;
+    background: var(--nc-bg-white);
+}
+
+.nc-field__input:focus {
+    outline: none;
+    border-color: var(--nc-primary);
+    box-shadow: 0 0 0 3px rgba(32, 181, 185, 0.1);
+}
+
+/* Радио кнопки */
+.nc-radio-group {
+    display: flex;
+    gap: var(--nc-gap-sm);
+    flex-wrap: wrap;
+}
+
+.nc-radio {
+    position: relative;
+    flex: 1;
+    min-width: 80px;
+}
+
+.nc-radio__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.nc-radio__label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    background: var(--nc-bg-light);
+    border: 2px solid transparent;
+    border-radius: var(--nc-radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: var(--nc-gap-sm);
+}
+
+.nc-radio__label:hover {
+    border-color: var(--nc-primary);
+    transform: translateY(-2px);
+}
+
+.nc-radio__input:checked + .nc-radio__label {
+    border-color: var(--nc-primary);
+    background: rgba(32, 181, 185, 0.1);
+}
+
+.nc-radio__image {
+    max-width: 60px;
+    max-height: 60px;
+    width: 100%;
+    height: auto;
+}
+
+/* Подписи для слайдеров */
+.nc-slider-description {
+    margin-bottom: 8px;
+    margin-top: 5px;
+}
+
+.nc-slider-description__text {
+    font-size: var(--nc-text-sm);
+    color: var(--nc-text-light);
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* Слайдеры */
+.nc-slider {
+    position: relative;
+    background: var(--nc-bg-light);
+    border-radius: var(--nc-radius-sm);
+    padding: 15px 20px 40px;
+    margin: 10px 0;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nc-slider__min,
+.nc-slider__max {
+    font-size: var(--nc-text-xs);
+    color: var(--nc-text-light);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.nc-slider__value {
+    font-weight: 600;
+    font-size: var(--nc-text-lg);
+    color: var(--nc-primary);
+}
+
+.nc-slider__input {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    right: 20px;
+    height: 6px;
+    background: #ddd;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.nc-slider__input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #20b5b9, #62d2d5);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(32, 181, 185, 0.4);
+    border: 3px solid white;
+    transition: all 0.3s ease;
+}
+
+.nc-slider__input::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 6px 20px rgba(32, 181, 185, 0.5);
+}
+
+.nc-slider__input::-moz-range-track {
+    height: 6px;
+    background: #ddd;
+    border-radius: 3px;
+    border: none;
+}
+
+.nc-slider__input::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #20b5b9, #62d2d5);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(32, 181, 185, 0.4);
+    border: 3px solid white;
+    transition: all 0.3s ease;
+}
+
+/* Кнопки */
+.nc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--nc-radius-sm);
+    font-weight: 600;
+    font-size: var(--nc-text-base);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.nc-btn--primary {
+    background: var(--nc-primary);
+    color: white;
+}
+
+.nc-btn--primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--nc-shadow);
+}
+
+.nc-btn--secondary {
+    background: var(--nc-secondary);
+    color: white;
+}
+
+.nc-btn--secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--nc-shadow);
+}
+
+/* Сводка */
+.nc-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nc-gap-md);
+}
+
+.nc-summary__price {
+    font-size: var(--nc-text-3xl);
+    font-weight: 800;
+    color: var(--nc-primary);
+    text-align: center;
+    margin-bottom: var(--nc-gap-md);
+}
+
+.nc-summary__spec {
+    display: grid;
+    gap: var(--nc-gap-sm);
+}
+
+.nc-summary__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--nc-bg-white);
+    border-radius: var(--nc-radius-sm);
+}
+
+.nc-summary__label {
+    font-weight: 500;
+    color: var(--nc-text-dark);
+}
+
+.nc-summary__value {
+    font-weight: 600;
+    color: var(--nc-primary);
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .naves-calc {
+        flex-direction: column;
+    }
+    
+    #nc-form,
+    .naves-calc__view {
+        flex: 1;
+        min-width: 100%;
+        max-width: none;
+    }
+    
+    #nc-canvas {
+        min-height: 400px;
+    }
+    
+    /* Оптимизация для планшетов */
+    .naves-calc__view {
+        min-height: 500px;
+    }
+}
+
+@media (max-width: 768px) {
+    .naves-calc-wrapper {
+        padding: var(--nc-gap-md);
+    }
+    
+    .naves-calc {
+        gap: var(--nc-gap-md);
+        margin-bottom: 40px;
+    }
+    
+    #nc-form,
+    .naves-calc__view {
+        padding: var(--nc-gap-md);
+    }
+    
+    #nc-canvas {
+        min-height: 350px;
+    }
+    
+    /* Оптимизация для мобильных устройств */
+    .naves-calc__view {
+        min-height: 400px;
+    }
+    
+    /* Улучшенные стили для 3D окна на мобильных */
+    .naves-calc__view canvas {
+        border-radius: 8px;
+    }
+    
+    .nc-radio-group {
+        gap: var(--nc-gap-sm);
+    }
+    
+    .nc-radio {
+        flex: 0 0 calc(33.333% - 8px);
+        min-width: 80px;
+    }
+    
+    .nc-radio__label {
+        min-height: 80px;
+    }
+    
+    .nc-radio__image {
+        max-width: 40px;
+        max-height: 40px;
+    }
+    
+    .specification {
+        padding: 40px 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .naves-calc-wrapper {
+        padding: var(--nc-gap-sm);
+    }
+    
+    .naves-calc {
+        margin-bottom: 30px;
+    }
+    
+    #nc-form,
+    .naves-calc__view {
+        padding: var(--nc-gap-sm);
+    }
+    
+    #nc-canvas {
+        min-height: 300px;
+    }
+    
+    /* Оптимизация для маленьких экранов */
+    .naves-calc__view {
+        min-height: 350px;
+    }
+    
+    /* Упрощенные стили для 3D окна на маленьких экранах */
+    .naves-calc__view canvas {
+        border-radius: 6px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nc-summary__price {
+        font-size: var(--nc-text-2xl);
+    }
+    
+    .specification {
+        padding: 30px 15px;
+    }
+    
+    .specification h2 {
+        font-size: var(--nc-text-2xl);
+    }
+}
+
+/* Утилиты */
+.nc-hidden {
+    display: none !important;
+}
+
+.nc-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.nc-error {
+    color: var(--nc-secondary);
+    font-size: var(--nc-text-sm);
+    margin-top: 4px;
+}
+
+/* Спецификация навеса */
+.specification {
+    background: var(--nc-bg-light);
+    padding: 60px 40px;
+    border-radius: var(--nc-radius);
+    border: 1px solid var(--nc-border);
+    width: 100%;
+}
+
+.specification h2 {
+    font-family: var(--nc-font-heading);
+    font-size: var(--nc-text-3xl);
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1.2;
+    margin-bottom: 30px;
+    color: var(--nc-text-dark);
+}
+
+.specification dl {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: var(--nc-radius-sm);
+    overflow: hidden;
+}
+
+.specification dt {
+    display: flex;
+    align-items: center;
+    padding: 20px 25px;
+    background: var(--nc-bg-white);
+    cursor: pointer;
+    border-bottom: 1px solid var(--nc-border);
+    transition: background-color 0.3s ease;
+}
+
+.specification dt:hover {
+    background: #f9f9f9;
+}
+
+.specification .num {
+    color: #EB1B24;
+    font-weight: 600;
+    margin-right: 15px;
+}
+
+.specification .name {
+    font-size: var(--nc-text-lg);
+    font-weight: 600;
+    line-height: 1.2;
+    text-transform: uppercase;
+    flex: 1;
+}
+
+.specification .arrow {
+    flex: 0 0 auto;
+    transition: transform 0.3s ease;
+}
+
+.specification dt.active .arrow {
+    transform: rotate(180deg);
+}
+
+.specification dd {
+    display: none;
+    padding: 0;
+    background: var(--nc-bg-white);
+}
+
+.specification dd.active {
+    display: block;
+}
+
+.specification ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.specification li {
+    display: flex;
+    align-items: center;
+    padding: 15px 25px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.specification li:last-child {
+    border-bottom: none;
+}
+
+.specification li .num {
+    color: #666;
+    font-weight: 500;
+    margin-right: 15px;
+    min-width: 30px;
+}
+
+.specification .parameter {
+    flex: 1;
+    color: var(--nc-text-light);
+}
+
+.specification .value {
+    font-weight: 600;
+    color: var(--nc-text-dark);
+    margin-left: auto;
+}
+
+/* Вспомогательные классы */
+.mb-30 { margin-bottom: 30px; }
+.flex { display: flex; }
+.aic { align-items: center; }
+.f2 { font-family: var(--nc-font-heading); }
+.pointer { cursor: pointer; }
+
+/* Анимации */
+@keyframes nc-fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.nc-animate-in {
+    animation: nc-fadeIn 0.3s ease;
+}
+
+/* Блоки уточнения дизайна и параметров каркаса */
+.design-refinement,
+.frame-params-refinement {
+    margin-bottom: 40px;
+    background: var(--nc-bg-white);
+    border-radius: var(--nc-radius);
+    border: 1px solid var(--nc-border);
+    overflow: hidden;
+    box-shadow: var(--nc-shadow);
+}
+
+.calculator-hide-date {
+    width: 100%;
+}
+
+.triger-open {
+    padding: 20px 25px;
+    background: var(--nc-bg-white);
+    border-bottom: 1px solid var(--nc-border);
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.triger-open:hover {
+    background: #f9f9f9;
+}
+
+.triger-open .arrow {
+    width: 30px;
+    height: 30px;
+    background: #EB1B24;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.triger-open.active .arrow {
+    transform: rotate(180deg);
+}
+
+.calculator-hide-info {
+    padding: 0 25px 25px;
+    display: none;
+}
+
+.calculator-hide-info.active {
+    display: block;
+}
+
+/* Стили для выбора столбов и раскосов */
+.type-row-raido {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.type-row-raido-col {
+    flex: 0 0 calc(12.5% - 12px);
+    min-width: 80px;
+}
+
+.raido-image {
+    position: relative;
+}
+
+.raido-image input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.raido-image label {
+    display: block;
+    padding: 8px;
+    border: 2px solid var(--nc-border);
+    border-radius: var(--nc-radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--nc-bg-white);
+    text-align: center;
+}
+
+.raido-image label:hover {
+    border-color: var(--nc-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(32, 181, 185, 0.2);
+}
+
+.raido-image input[type="radio"]:checked + label {
+    border-color: var(--nc-primary);
+    background: rgba(32, 181, 185, 0.1);
+    box-shadow: 0 4px 12px rgba(32, 181, 185, 0.3);
+}
+
+.raido-image img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* Стили для полей формы */
+.field-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.field-col {
+    flex: 1;
+    min-width: 200px;
+}
+
+.label_cl {
+    display: block;
+    font-weight: 600;
+    font-size: var(--nc-text-lg);
+    color: var(--nc-text-dark);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--nc-border);
+    border-radius: var(--nc-radius-sm);
+    font-size: var(--nc-text-base);
+    background: var(--nc-bg-white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.select:focus {
+    outline: none;
+    border-color: var(--nc-primary);
+    box-shadow: 0 0 0 3px rgba(32, 181, 185, 0.1);
+}
+
+/* Стили для слайдеров */
+.has-slider {
+    position: relative;
+    background: var(--nc-bg-light);
+    border-radius: var(--nc-radius-sm);
+    padding: 15px 20px 40px;
+    margin: 10px 0;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.has-slider .ot,
+.has-slider .do {
+    font-size: var(--nc-text-xs);
+    color: var(--nc-text-light);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.has-slider .value {
+    font-weight: 600;
+    font-size: var(--nc-text-lg);
+    color: var(--nc-primary);
+}
+
+.has-slider .ui-container {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    right: 20px;
+}
+
+.has-slider .slider {
+    width: 100%;
+    height: 6px;
+    background: #ddd;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.has-slider .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #20b5b9, #62d2d5);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(32, 181, 185, 0.4);
+    border: 3px solid white;
+    transition: all 0.3s ease;
+}
+
+.has-slider .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 6px 20px rgba(32, 181, 185, 0.5);
+}
+
+.has-slider .slider::-moz-range-track {
+    height: 6px;
+    background: #ddd;
+    border-radius: 3px;
+    border: none;
+}
+
+.has-slider .slider::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #20b5b9, #62d2d5);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(32, 181, 185, 0.4);
+    border: 3px solid white;
+    transition: all 0.3s ease;
+}
+
+/* Адаптивность для новых блоков */
+@media (max-width: 768px) {
+    .type-row-raido-col {
+        flex: 0 0 calc(25% - 12px);
+    }
+    
+    .field-col {
+        min-width: 100%;
+    }
+    
+    .field-row {
+        flex-direction: column;
+    }
+    
+    .raido-image img {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+@media (max-width: 576px) {
+    .type-row-raido-col {
+        flex: 0 0 calc(33.333% - 10px);
+    }
+    
+    .raido-image img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .triger-open {
+        padding: 15px 20px;
+    }
+    
+    .calculator-hide-info {
+        padding: 0 20px 20px;
+    }
+}
+
+/* Улучшения производительности */
+.naves-calc * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#nc-canvas {
+    will-change: transform;
+}
