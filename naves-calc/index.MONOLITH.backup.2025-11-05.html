@@ -1314,34 +1314,16 @@
     </section>
     </div>
     
-    <!-- ====================================== -->
-    <!-- MVP ARCHITECTURE SCRIPTS              -->
-    <!-- ====================================== -->
-    
-    <!-- Модули расширенной функциональности -->
+    <!-- Модули для расширенной функциональности -->
     <script src="/naves-calc/assets/js/storage-manager.js"></script>
     <script src="/naves-calc/assets/js/order-manager.js"></script>
     <script src="/naves-calc/assets/js/pdf-export.js"></script>
     
-    <!-- MVP Core Components -->
-    <script src="/naves-calc/assets/js/mvp/CanopyModel.js"></script>
-    <script src="/naves-calc/assets/js/mvp/CanopyView.js"></script>
-    
-    <!-- Three.js Dependencies -->
-    <script src="/naves-calc/assets/libs/three/three.min.js"></script>
-    <script src="/naves-calc/assets/libs/three/OrbitControls.js"></script>
-    
-    <!-- MVP Renderer & Presenter -->
-    <script src="/naves-calc/assets/js/mvp/Canopy3DRenderer.js"></script>
-    <script src="/naves-calc/assets/js/mvp/CanopyPresenter.js"></script>
-    
-    <!-- MVP App Initialization -->
-    <script src="/naves-calc/assets/js/mvp/app.js"></script>
-    
+    <!-- Оригинальный калькулятор (для 3D функционала) -->
+    <script type="module" src="/naves-calc/assets/js/naves-calc.bundle.js"></script>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            // MVP архитектура инициализируется автоматически через app.js
-            // Доступ к приложению через window.CanopyApp
+            window.NavesCalc.init('#nc-form', '#nc-canvas', '#nc-summary');
             
             // Инициализация функциональности сворачивания/разворачивания блоков
             initCollapsibleBlocks();
@@ -1357,11 +1339,11 @@
             // Инициализация кнопок управления камерой
             initCameraControls();
             
+            // Инициализация функций заказа и скачивания
+            initOrderFunctions();
+            
             // Оптимизированная инициализация
             PerformanceOptimizer.optimizeForDevice();
-            
-            console.log('✅ MVP Architecture активирована');
-            console.log('📦 Доступ через window.CanopyApp');
         });
         
         function initCollapsibleBlocks() {
@@ -1877,10 +1859,7 @@
             }
         }
         
-        // ⚠️ DEPRECATED: Эта функция больше не используется
-        // Все функции заказа, сохранения и экспорта перенесены в MVP архитектуру
-        // и создаются автоматически в app.js через window.makeOrder(), window.saveCalculation(), window.exportToPDF()
-        function initOrderFunctions_DEPRECATED() {
+        function initOrderFunctions() {
             // Инициализация менеджеров
             const storageManager = new StorageManager();
             const orderManager = new OrderManager('/api/orders'); // Настройте путь к вашему API
