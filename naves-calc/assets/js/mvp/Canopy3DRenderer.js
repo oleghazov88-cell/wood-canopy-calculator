@@ -986,9 +986,10 @@ class Canopy3DRenderer {
         const frontBeamExtension = this.params.frontBeamExtension / 1000;
         const backBeamExtension = this.params.backBeamExtension / 1000;
         
-        const roofType = this.getSelectedRadioValue('type-karkas') || 'var-2';
-        const postType = this.params.postType || this.getSelectedRadioValue('type-stolbi') || 'var-1';
-        const braceType = this.params.braceType || this.getSelectedRadioValue('type-raskosi') || 'var-1';
+        // ✅ MVP: Используем параметры напрямую, без обращения к форме
+        const roofType = this.params.roofType || 'var-2';
+        const postType = this.params.postType || 'var-1';
+        const braceType = this.params.braceType || 'var-1';
         const postMaterial = this.params.postMaterial || 'glued-150x150';
         const trussMaterial = this.params.trussMaterial || 'planed-45x190';
         const frameMaterial = this.params.frameMaterial || 'pine';
@@ -1079,7 +1080,17 @@ class Canopy3DRenderer {
     }
 
     // Получение выбранного значения радиокнопки
+    // ⚠️ DEPRECATED в MVP: форма управляется через CanopyView
+    // Параметры передаются через this.params из CanopyModel
     getSelectedRadioValue(name) {
+        console.warn('getSelectedRadioValue() устарел в MVP архитектуре. Используйте this.params вместо этого.');
+        
+        // Для обратной совместимости, если метод все еще вызывается
+        if (!this.formElement) {
+            console.error('formElement is null - форма не инициализирована');
+            return 'var-1';
+        }
+        
         const selected = this.formElement.querySelector(`input[name="${name}"]:checked`);
         if (selected) {
             return selected.value;
@@ -3708,9 +3719,13 @@ class Canopy3DRenderer {
         };
         
         // Обновление значений
-        const roofType = this.getSelectedRadioValue('type-karkas') || 'var-2';
+        // ✅ MVP: Используем параметры из модели
+        const roofType = this.params.roofType || 'var-2';
         
-        document.getElementById('specRoofType').textContent = materialNames[roofType] || 'Двускатный';
+        const specRoofTypeElement = document.getElementById('specRoofType');
+        if (specRoofTypeElement) {
+            specRoofTypeElement.textContent = materialNames[roofType] || 'Двускатный';
+        }
         document.getElementById('specFrameMaterial').textContent = 'Сосна';
         document.getElementById('specRoofingMaterial').textContent = materialNames[this.params.roofingMaterial] || 'Металлочерепица';
         document.getElementById('specRoofColor').textContent = materialNames[this.params.roofColor] || 'Янтарь';
