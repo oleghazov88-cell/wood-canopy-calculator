@@ -59,7 +59,7 @@ class Canopy3DRenderer {
         this.currentPostSpacing = this.params.postSpacing / 10; // Инициализация из параметров (дециметры -> метры)
         
         this.formElement = null;
-        // this.canvasElement уже инициализирован выше (строка 19)
+        // this.canvasElement уже объявлен выше (строка 19)
         this.summaryElement = null;
     }
 
