@@ -3722,35 +3722,38 @@ class Canopy3DRenderer {
         // ✅ MVP: Используем параметры из модели
         const roofType = this.params.roofType || 'var-2';
         
-        const specRoofTypeElement = document.getElementById('specRoofType');
-        if (specRoofTypeElement) {
-            specRoofTypeElement.textContent = materialNames[roofType] || 'Двускатный';
-        }
-        document.getElementById('specFrameMaterial').textContent = 'Сосна';
-        document.getElementById('specRoofingMaterial').textContent = materialNames[this.params.roofingMaterial] || 'Металлочерепица';
-        document.getElementById('specRoofColor').textContent = materialNames[this.params.roofColor] || 'Янтарь';
-        document.getElementById('specArea').textContent = area.toFixed(1) + 'м²';
-        document.getElementById('specWidth').textContent = (width * 1000) + ' мм';
-        document.getElementById('specLength').textContent = Math.round(length * 1000 + frontBeamExtension + backBeamExtension) + ' мм';
-        document.getElementById('specHeight').textContent = (height * 1000) + ' мм';
-        document.getElementById('specRoofHeight').textContent = (roofHeight * 1000) + ' мм';
-        document.getElementById('specPostSpacing').textContent = (postSpacing * 1000) + ' мм';
+        // ✅ MVP: Безопасное обновление элементов с проверкой существования
+        const updateElement = (id, value) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        };
         
-        document.getElementById('specPosts').textContent = postCount + ' шт.';
-        document.getElementById('specPostType').textContent = 'Квадратный брус';
-        document.getElementById('specPostMaterial').textContent = 'Сосна';
-        document.getElementById('specHeightLeft').textContent = (height * 1000) + ' мм';
-        document.getElementById('specHeightRight').textContent = (height * 1000) + ' мм';
-        document.getElementById('specPostSection').textContent = postSectionNames[this.params.postMaterial] || '150×150 мм';
+        updateElement('specRoofType', materialNames[roofType] || 'Двускатный');
+        updateElement('specFrameMaterial', 'Сосна');
+        updateElement('specRoofingMaterial', materialNames[this.params.roofingMaterial] || 'Металлочерепица');
+        updateElement('specRoofColor', materialNames[this.params.roofColor] || 'Янтарь');
+        updateElement('specArea', area.toFixed(1) + 'м²');
+        updateElement('specWidth', (width * 1000) + ' мм');
+        updateElement('specLength', Math.round(length * 1000 + frontBeamExtension + backBeamExtension) + ' мм');
+        updateElement('specHeight', (height * 1000) + ' мм');
+        updateElement('specRoofHeight', (roofHeight * 1000) + ' мм');
+        updateElement('specPostSpacing', (postSpacing * 1000) + ' мм');
         
-        document.getElementById('specFarms').textContent = trussCount + ' шт.';
-        document.getElementById('specTrussMaterial').textContent = trussMaterialNames[this.params.trussMaterial] || 'Строганая доска 45×190 мм';
-        document.getElementById('specFarmLength').textContent = (width * 1000) + ' мм';
-        document.getElementById('specTrussSpacing').textContent = Math.round(trussSpacing) + ' мм';
+        updateElement('specPosts', postCount + ' шт.');
+        updateElement('specPostType', 'Квадратный брус');
+        updateElement('specPostMaterial', 'Сосна');
+        updateElement('specHeightLeft', (height * 1000) + ' мм');
+        updateElement('specHeightRight', (height * 1000) + ' мм');
+        updateElement('specPostSection', postSectionNames[this.params.postMaterial] || '150×150 мм');
         
-        document.getElementById('specBraces').textContent = braceCount + ' шт.';
-        document.getElementById('specBraceType').textContent = 'Стандартный';
-        document.getElementById('specBraceMaterial').textContent = 'Сосна';
+        updateElement('specFarms', trussCount + ' шт.');
+        updateElement('specTrussMaterial', trussMaterialNames[this.params.trussMaterial] || 'Строганая доска 45×190 мм');
+        updateElement('specFarmLength', (width * 1000) + ' мм');
+        updateElement('specTrussSpacing', Math.round(trussSpacing) + ' мм');
+        
+        updateElement('specBraces', braceCount + ' шт.');
+        updateElement('specBraceType', 'Стандартный');
+        updateElement('specBraceMaterial', 'Сосна');
     }
 
     // Отображение сводки
