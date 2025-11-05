@@ -15,11 +15,10 @@
  */
 class Canopy3DRenderer {
     constructor(canvasSelector) {
-        this.canvasElement = document.querySelector(canvasSelector);
+        this.canvasSelector = canvasSelector; // Сохраняем селектор, а не сам элемент
+        this.canvasElement = null; // Будет установлен в init()
         
-        if (!this.canvasElement) {
-            throw new Error('Не найден canvas элемент');
-        }
+        // ✅ Проверка перенесена в метод init() для избежания ошибок при ранней инициализации
         
         this.config = {
             pricesUrl: '/naves-calc/upload/naves/prices.json',
@@ -60,7 +59,7 @@ class Canopy3DRenderer {
         this.currentPostSpacing = this.params.postSpacing / 10; // Инициализация из параметров (дециметры -> метры)
         
         this.formElement = null;
-        this.canvasElement = null;
+        // this.canvasElement уже инициализирован выше (строка 19)
         this.summaryElement = null;
     }
 
@@ -70,14 +69,21 @@ class Canopy3DRenderer {
         try {
             console.log('Инициализация 3D Renderer...');
             
+            // Получаем canvas элемент (теперь DOM точно загружен)
+            this.canvasElement = document.querySelector(this.canvasSelector);
+            
             if (!this.canvasElement) {
-                throw new Error('Canvas элемент не найден');
+                throw new Error(`Canvas элемент не найден: ${this.canvasSelector}`);
             }
+            
+            console.log('✓ Canvas элемент найден:', this.canvasElement);
             
             // Проверяем наличие THREE.js
             if (typeof THREE === 'undefined') {
                 throw new Error('Three.js не загружен');
             }
+            
+            console.log('✓ Three.js загружен');
             
             // Инициализируем Three.js сцену
             this.init3DScene();
