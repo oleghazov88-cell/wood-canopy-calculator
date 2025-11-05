@@ -1343,6 +1343,43 @@
             // MVP архитектура инициализируется автоматически через app.js
             // Доступ к приложению через window.CanopyApp
             
+            // Создаем обертку для обратной совместимости
+            setTimeout(() => {
+                if (window.CanopyApp && window.CanopyApp.renderer) {
+                    window.NavesCalc = {
+                        camera: window.CanopyApp.renderer.camera,
+                        controls: window.CanopyApp.renderer.controls,
+                        renderer: window.CanopyApp.renderer.renderer,
+                        scene: window.CanopyApp.renderer.scene,
+                        params: window.CanopyApp.model.params,
+                        currentPostSpacing: window.CanopyApp.model.params.postSpacing / 10,
+                        needsRender: true,
+                        
+                        update3DModel: () => {
+                            window.CanopyApp.presenter.update3DModelImmediately();
+                        },
+                        calculateTotal: () => {
+                            window.CanopyApp.presenter.calculateAndUpdate();
+                        },
+                        updateSpecification: () => {
+                            window.CanopyApp.presenter.calculateAndUpdate();
+                        },
+                        updateParam: (key, value) => {
+                            window.CanopyApp.model.updateParam(key, value);
+                            window.CanopyApp.presenter.calculateAndUpdate();
+                            window.CanopyApp.presenter.update3DModelDebounced();
+                        },
+                        setQualityLevelManual: (level) => {
+                            if (window.CanopyApp.renderer.setQualityLevel) {
+                                window.CanopyApp.renderer.setQualityLevel(level);
+                            }
+                        },
+                        qualityLevel: 'high'
+                    };
+                    console.log('✅ Обертка совместимости window.NavesCalc создана');
+                }
+            }, 500);
+            
             // Инициализация функциональности сворачивания/разворачивания блоков
             initCollapsibleBlocks();
             
@@ -1355,7 +1392,9 @@
             }, 100);
             
             // Инициализация кнопок управления камерой
-            initCameraControls();
+            setTimeout(() => {
+                initCameraControls();
+            }, 600);
             
             // Оптимизированная инициализация
             PerformanceOptimizer.optimizeForDevice();
