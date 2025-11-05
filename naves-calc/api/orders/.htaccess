@@ -1,0 +1,11 @@
+# Запрет прямого доступа к файлам заказов
+# Защита конфиденциальных данных клиентов
+
+Order Deny,Allow
+Deny from all
+
+# Только PHP скрипты могут читать эти файлы
+<FilesMatch "\.(json|log)$">
+    Deny from all
+</FilesMatch>
+
