@@ -3786,7 +3786,6 @@ class Canopy3DRenderer {
     }
 }
 
-// Глобальный объект для доступа извне
-window.NavesCalc = new NavesCalculator();
-
-export default window.NavesCalc;
+// ✅ MVP: Класс Canopy3DRenderer доступен глобально
+// Экземпляр создается в app.js через: new Canopy3DRenderer('#nc-canvas')
+// Обертка window.NavesCalc создается в index.html для совместимости
