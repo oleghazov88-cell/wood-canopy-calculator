@@ -1314,11 +1314,6 @@
     </section>
     </div>
     
-    <!-- Модули для расширенной функциональности -->
-    <script src="/naves-calc/assets/js/storage-manager.js"></script>
-    <script src="/naves-calc/assets/js/order-manager.js"></script>
-    <script src="/naves-calc/assets/js/pdf-export.js"></script>
-    
     <!-- Оригинальный калькулятор (для 3D функционала) -->
     <script type="module" src="/naves-calc/assets/js/naves-calc.bundle.js"></script>
     <script>
@@ -1860,265 +1855,17 @@
         }
         
         function initOrderFunctions() {
-            // Инициализация менеджеров
-            const storageManager = new StorageManager();
-            const orderManager = new OrderManager('/api/orders'); // Настройте путь к вашему API
-            const pdfExporter = new PDFExporter();
-            
-            // Функция получения текущих данных расчета
-            function getCurrentCalculationData() {
-                const params = window.NavesCalc ? window.NavesCalc.params : {};
-                const totalPrice = document.getElementById('totalPrice')?.textContent || '0 ₽';
-                
-                return {
-                    // Основные параметры
-                    length: params.length ? params.length / 10 : 0, // конвертируем в метры
-                    width: params.width ? params.width / 10 : 0,
-                    height: params.height ? params.height / 10 : 0,
-                    roofHeight: params.roofHeight ? params.roofHeight / 10 : 0,
-                    area: params.length && params.width ? (params.length * params.width / 100).toFixed(2) : 0,
-                    
-                    // Типы и материалы
-                    roofType: params.roofType || 'var-2',
-                    postType: params.postType || 'var-5',
-                    braceType: params.braceType || 'var-1',
-                    postMaterial: params.postMaterial || 'glued-150x150',
-                    trussMaterial: params.trussMaterial || 'planed-45x190',
-                    roofingMaterial: params.roofingMaterial || 'metal-grandline',
-                    roofColor: params.roofColor || 'amber',
-                    frameMaterial: params.frameMaterial || 'pine',
-                    frameColoring: params.frameColoring || 'no-coloring',
-                    
-                    // Дополнительно
-                    postSpacing: params.postSpacing ? params.postSpacing / 10 : 2.5,
-                    frontBeamExtension: params.frontBeamExtension || 200,
-                    backBeamExtension: params.backBeamExtension || 200,
-                    mountingRequired: params.mountingRequired || 'yes',
-                    distanceFromMKAD: params.distanceFromMKAD || 10,
-                    
-                    // Итоговая стоимость
-                    totalPrice: totalPrice,
-                    timestamp: Date.now(),
-                    date: new Date().toLocaleString('ru-RU')
-                };
-            }
-            
             // Функция заказа
             window.makeOrder = function() {
-                try {
-                    const calculationData = getCurrentCalculationData();
-                    const orderForm = orderManager.createOrderForm(calculationData);
-                    document.body.appendChild(orderForm);
-                } catch (error) {
-                    console.error('Ошибка при создании формы заказа:', error);
-                    alert('Произошла ошибка при открытии формы заказа. Попробуйте позже.');
-                }
+                const totalPrice = document.getElementById('totalPrice').textContent;
+                alert(`Функция заказа будет реализована.\nОбщая стоимость: ${totalPrice}`);
             };
             
             // Функция сохранения расчета
             window.saveCalculation = function() {
-                try {
-                    const calculationData = getCurrentCalculationData();
-                    
-                    // Запрашиваем название для расчета
-                    const name = prompt('Введите название для расчета:', `Навес ${calculationData.length}×${calculationData.width}м`);
-                    
-                    if (name !== null) { // Пользователь не нажал "Отмена"
-                        const calcId = storageManager.saveCalculation(calculationData, name || undefined);
-                        
-                        // Показываем уведомление об успехе
-                        showNotification('✅ Расчет сохранен!', 'success');
-                        
-                        // Обновляем список истории, если панель открыта
-                        updateHistoryPanel();
-                    }
-                } catch (error) {
-                    console.error('Ошибка при сохранении расчета:', error);
-                    showNotification('❌ Ошибка при сохранении расчета', 'error');
-                }
+                const totalPrice = document.getElementById('totalPrice').textContent;
+                alert(`Функция сохранения будет реализована.\nОбщая стоимость: ${totalPrice}`);
             };
-            
-            // Функция экспорта в PDF
-            window.exportToPDF = function() {
-                try {
-                    const calculationData = getCurrentCalculationData();
-                    const filename = `naves_${calculationData.length}x${calculationData.width}m_${Date.now()}.pdf`;
-                    
-                    showNotification('⏳ Генерация PDF...', 'info');
-                    
-                    pdfExporter.exportToPDF(calculationData, filename).then(() => {
-                        showNotification('✅ PDF успешно создан!', 'success');
-                    }).catch((error) => {
-                        console.error('Ошибка при экспорте PDF:', error);
-                        showNotification('❌ Ошибка при создании PDF', 'error');
-                    });
-                } catch (error) {
-                    console.error('Ошибка при экспорте PDF:', error);
-                    showNotification('❌ Ошибка при экспорте PDF', 'error');
-                }
-            };
-            
-            // Функция загрузки сохраненного расчета
-            window.loadSavedCalculation = function(calcId) {
-                try {
-                    const calculationData = storageManager.loadCalculation(calcId);
-                    
-                    if (calculationData && window.NavesCalc) {
-                        // Применяем сохраненные параметры
-                        const params = calculationData;
-                        
-                        // Обновляем параметры калькулятора
-                        if (params.length) window.NavesCalc.updateParam('length', params.length * 10); // конвертируем обратно в дециметры
-                        if (params.width) window.NavesCalc.updateParam('width', params.width * 10);
-                        if (params.height) window.NavesCalc.updateParam('height', params.height * 10);
-                        if (params.roofHeight) window.NavesCalc.updateParam('roofHeight', params.roofHeight * 10);
-                        if (params.roofType) window.NavesCalc.updateParam('roofType', params.roofType);
-                        if (params.postType) window.NavesCalc.updateParam('postType', params.postType);
-                        if (params.braceType) window.NavesCalc.updateParam('braceType', params.braceType);
-                        if (params.postMaterial) window.NavesCalc.updateParam('postMaterial', params.postMaterial);
-                        if (params.trussMaterial) window.NavesCalc.updateParam('trussMaterial', params.trussMaterial);
-                        if (params.roofingMaterial) window.NavesCalc.updateParam('roofingMaterial', params.roofingMaterial);
-                        if (params.roofColor) window.NavesCalc.updateParam('roofColor', params.roofColor);
-                        
-                        showNotification('✅ Расчет загружен!', 'success');
-                    } else {
-                        showNotification('❌ Расчет не найден', 'error');
-                    }
-                } catch (error) {
-                    console.error('Ошибка при загрузке расчета:', error);
-                    showNotification('❌ Ошибка при загрузке расчета', 'error');
-                }
-            };
-            
-            // Функция удаления расчета
-            window.deleteSavedCalculation = function(calcId) {
-                if (confirm('Вы уверены, что хотите удалить этот расчет?')) {
-                    try {
-                        storageManager.deleteCalculation(calcId);
-                        updateHistoryPanel();
-                        showNotification('✅ Расчет удален', 'success');
-                    } catch (error) {
-                        console.error('Ошибка при удалении расчета:', error);
-                        showNotification('❌ Ошибка при удалении', 'error');
-                    }
-                }
-            };
-            
-            // Функция обновления панели истории
-            window.updateHistoryPanel = function() {
-                const historyPanel = document.getElementById('history-panel');
-                if (!historyPanel) return;
-                
-                const calculations = storageManager.getAllCalculations();
-                const historyList = historyPanel.querySelector('.history-list');
-                
-                if (!historyList) return;
-                
-                if (calculations.length === 0) {
-                    historyList.innerHTML = '<p style="text-align: center; color: #999;">Нет сохраненных расчетов</p>';
-                    return;
-                }
-                
-                historyList.innerHTML = calculations.map(calc => `
-                    <div class="history-item" data-id="${calc.id}">
-                        <div class="history-item-header">
-                            <strong>${calc.name}</strong>
-                            <span class="history-item-date">${new Date(calc.timestamp).toLocaleString('ru-RU')}</span>
-                        </div>
-                        <div class="history-item-details">
-                            ${calc.data.length}×${calc.data.width}м, ${calc.data.totalPrice}
-                        </div>
-                        <div class="history-item-actions">
-                            <button onclick="loadSavedCalculation('${calc.id}')" class="btn-small btn-primary">Загрузить</button>
-                            <button onclick="deleteSavedCalculation('${calc.id}')" class="btn-small btn-danger">Удалить</button>
-                        </div>
-                    </div>
-                `).join('');
-            };
-            
-            // Функция показа уведомлений
-            function showNotification(message, type = 'info') {
-                const notification = document.createElement('div');
-                notification.className = `notification notification-${type}`;
-                notification.textContent = message;
-                notification.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    padding: 15px 25px;
-                    background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
-                    color: white;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                    z-index: 10000;
-                    font-size: 14px;
-                    animation: slideIn 0.3s ease;
-                `;
-                
-                document.body.appendChild(notification);
-                
-                setTimeout(() => {
-                    notification.style.animation = 'slideOut 0.3s ease';
-                    setTimeout(() => notification.remove(), 300);
-                }, 3000);
-            }
-            
-            // Добавляем стили для анимации уведомлений
-            if (!document.getElementById('notification-styles')) {
-                const style = document.createElement('style');
-                style.id = 'notification-styles';
-                style.textContent = `
-                    @keyframes slideIn {
-                        from { transform: translateX(400px); opacity: 0; }
-                        to { transform: translateX(0); opacity: 1; }
-                    }
-                    @keyframes slideOut {
-                        from { transform: translateX(0); opacity: 1; }
-                        to { transform: translateX(400px); opacity: 0; }
-                    }
-                    .history-item {
-                        padding: 15px;
-                        margin-bottom: 10px;
-                        background: #f5f5f5;
-                        border-radius: 8px;
-                        border-left: 4px solid #20B5B9;
-                    }
-                    .history-item-header {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-bottom: 8px;
-                    }
-                    .history-item-date {
-                        color: #999;
-                        font-size: 12px;
-                    }
-                    .history-item-details {
-                        color: #666;
-                        font-size: 14px;
-                        margin-bottom: 10px;
-                    }
-                    .history-item-actions {
-                        display: flex;
-                        gap: 10px;
-                    }
-                    .btn-small {
-                        padding: 6px 12px;
-                        font-size: 12px;
-                        border: none;
-                        border-radius: 4px;
-                        cursor: pointer;
-                    }
-                    .btn-primary {
-                        background: #20B5B9;
-                        color: white;
-                    }
-                    .btn-danger {
-                        background: #f44336;
-                        color: white;
-                    }
-                `;
-                document.head.appendChild(style);
-            }
             
             // Функция скачивания 3D изображения
             window.download3DImage = function() {
@@ -2423,6 +2170,13 @@
         });
         */
     </script>
+    
+    <!-- MVP Adapter Architecture - ВКЛЮЧЕН ✨ -->
+    <script src="/naves-calc/assets/js/mvp/CanopyModel.js"></script>
+    <script src="/naves-calc/assets/js/mvp/CanopyView.js"></script>
+    <script src="/naves-calc/assets/js/mvp-adapter/Canopy3DRendererAdapter.js"></script>
+    <script src="/naves-calc/assets/js/mvp-adapter/CanopyPresenterAdapter.js"></script>
+    <script src="/naves-calc/assets/js/mvp-adapter/app-adapter.js"></script>
     
 </body>
 </html>
