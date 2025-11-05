@@ -90,6 +90,25 @@ class Canopy3DRenderer {
         }
     }
     
+    // MVP метод update - обновление 3D модели с новыми параметрами
+    update(params) {
+        try {
+            // Обновляем внутренние параметры
+            Object.assign(this.params, params);
+            
+            // Обновляем currentPostSpacing для корректного расчета
+            if (params.postSpacing !== undefined) {
+                this.currentPostSpacing = params.postSpacing / 10; // дециметры -> метры
+            }
+            
+            // Перерисовываем 3D модель
+            this.update3DModel();
+            
+        } catch (error) {
+            console.error('Ошибка обновления 3D модели:', error);
+        }
+    }
+    
     // Старый монолитный метод (deprecated, для совместимости)
     async init_DEPRECATED(formSelector, canvasSelector, summarySelector) {
         try {
