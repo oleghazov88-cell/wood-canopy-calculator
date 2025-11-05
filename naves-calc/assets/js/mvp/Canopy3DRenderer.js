@@ -65,7 +65,33 @@ class Canopy3DRenderer {
     }
 
     // Инициализация калькулятора
-    async init(formSelector, canvasSelector, summarySelector) {
+    // MVP метод init - только для 3D сцены
+    async init() {
+        try {
+            console.log('Инициализация 3D Renderer...');
+            
+            if (!this.canvasElement) {
+                throw new Error('Canvas элемент не найден');
+            }
+            
+            // Проверяем наличие THREE.js
+            if (typeof THREE === 'undefined') {
+                throw new Error('Three.js не загружен');
+            }
+            
+            // Инициализируем Three.js сцену
+            this.init3DScene();
+            
+            console.log('✓ 3D Renderer инициализирован');
+            
+        } catch (error) {
+            console.error('Ошибка инициализации 3D Renderer:', error);
+            throw error;
+        }
+    }
+    
+    // Старый монолитный метод (deprecated, для совместимости)
+    async init_DEPRECATED(formSelector, canvasSelector, summarySelector) {
         try {
             this.formElement = document.querySelector(formSelector);
             this.canvasElement = document.querySelector(canvasSelector);
@@ -103,10 +129,10 @@ class Canopy3DRenderer {
     // Загрузка Three.js
     loadThreeJS() {
         return new Promise((resolve) => {
-            if (window.THREE) {
+        if (window.THREE) {
                 resolve();
                 return;
-            }
+        }
 
             const script = document.createElement('script');
             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
@@ -457,51 +483,51 @@ class Canopy3DRenderer {
 
     // Инициализация 3D сцены
     init3DScene() {
-        if (!window.THREE) {
+            if (!window.THREE) {
             console.error('Three.js не загружен');
             return;
-        }
+            }
 
-        const container = this.canvasElement.parentElement;
-        
-        // Создание сцены
-        this.scene = new THREE.Scene();
+            const container = this.canvasElement.parentElement;
+            
+            // Создание сцены
+            this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0xf8f9fa); // Более мягкий фон
 
-        // Создание камеры с оптимизированными параметрами
+            // Создание камеры с оптимизированными параметрами
         this.camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 500);
-        this.camera.position.set(15, 10, 15);
-        this.camera.lookAt(0, 0, 0);
+            this.camera.position.set(15, 10, 15);
+            this.camera.lookAt(0, 0, 0);
 
         // Создание рендерера с оптимизированными настройками
-        this.renderer = new THREE.WebGLRenderer({ 
-            canvas: this.canvasElement, 
+            this.renderer = new THREE.WebGLRenderer({ 
+                canvas: this.canvasElement, 
             antialias: true,
-            alpha: true,
-            powerPreference: "high-performance"
-        });
-        this.renderer.setSize(container.clientWidth, container.clientHeight);
+                alpha: true,
+                powerPreference: "high-performance"
+            });
+            this.renderer.setSize(container.clientWidth, container.clientHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Ограничиваем pixel ratio для производительности
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.renderer.outputEncoding = THREE.sRGBEncoding;
-        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.0;
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            this.renderer.outputEncoding = THREE.sRGBEncoding;
+            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            this.renderer.toneMappingExposure = 1.0;
 
         // Создание контролов с улучшенными настройками
-        if (window.THREE.OrbitControls) {
-            this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-            this.controls.enableDamping = true;
+            if (window.THREE.OrbitControls) {
+                this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.05; // Более плавное вращение
-            this.controls.enableZoom = true;
-            this.controls.enablePan = true;
-            this.controls.enableRotate = true;
-            this.controls.autoRotate = false;
-            this.controls.autoRotateSpeed = 0.5;
-            this.controls.minDistance = 5;
-            this.controls.maxDistance = 50;
+                this.controls.enableZoom = true;
+                this.controls.enablePan = true;
+                this.controls.enableRotate = true;
+                this.controls.autoRotate = false;
+                this.controls.autoRotateSpeed = 0.5;
+                this.controls.minDistance = 5;
+                this.controls.maxDistance = 50;
             this.controls.maxPolarAngle = Math.PI / 2; // Ограничиваем вертикальный поворот
-            this.controls.minPolarAngle = Math.PI / 6;
+                this.controls.minPolarAngle = Math.PI / 6;
             this.controls.target.set(0, 2, 0); // Фокус на уровне навеса
             
             // Настройки для плавного вращения мышкой
@@ -510,7 +536,7 @@ class Canopy3DRenderer {
             this.controls.panSpeed = 0.8; // Скорость панорамирования
             
             // Настройка кнопок мыши
-            this.controls.mouseButtons = {
+                this.controls.mouseButtons = {
                 LEFT: THREE.MOUSE.ROTATE,    // Левая кнопка - вращение
                 MIDDLE: THREE.MOUSE.DOLLY,   // Средняя кнопка - зум
                 RIGHT: THREE.MOUSE.PAN       // Правая кнопка - панорамирование
@@ -570,8 +596,8 @@ class Canopy3DRenderer {
         this.scene.add(rimLight);
 
         // Создание группы для навеса
-        this.canopyGroup = new THREE.Group();
-        this.scene.add(this.canopyGroup);
+            this.canopyGroup = new THREE.Group();
+            this.scene.add(this.canopyGroup);
 
         // Переменные для оптимизации
         this.needsRender = true;
@@ -608,8 +634,8 @@ class Canopy3DRenderer {
         this.resizeTimeout = null;
         window.addEventListener('resize', () => this.handleResizeDebounced());
 
-        // Запуск анимации
-        this.animate();
+            // Запуск анимации
+            this.animate();
     }
 
     // Дебаунсинг для изменения размера
@@ -826,7 +852,7 @@ class Canopy3DRenderer {
             }
         }
     }
-    
+
     // Проверка, находится ли геометрия в кэше
     isGeometryCached(geometry) {
         for (let [key, cachedGeometry] of this.geometryCache) {
@@ -868,7 +894,7 @@ class Canopy3DRenderer {
         this.materialCache.set(key, material);
         return material;
     }
-    
+
     // Получение или создание кэшированной текстуры
     getCachedTexture(key, createFunction) {
         if (this.textureCache.has(key)) {
