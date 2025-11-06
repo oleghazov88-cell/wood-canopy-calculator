@@ -540,8 +540,9 @@ class Canopy3DRenderer {
             this.renderer.toneMappingExposure = 1.0;
 
         // Создание контролов с улучшенными настройками
-            if (window.THREE.OrbitControls) {
+            if (typeof THREE.OrbitControls !== 'undefined') {
                 this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                console.log('✓ OrbitControls инициализированы');
                 this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.05; // Более плавное вращение
                 this.controls.enableZoom = true;
@@ -576,18 +577,25 @@ class Canopy3DRenderer {
             // Включаем инерцию для плавного движения
             this.controls.enableKeys = false;
             
-            // Добавляем обработчики событий для лучшего контроля
-            this.controls.addEventListener('start', () => {
-                this.isAnimating = true;
-            });
-            
-            this.controls.addEventListener('end', () => {
-                this.isAnimating = false;
-            });
-            
-            this.controls.addEventListener('change', () => {
-                this.needsRender = true;
-            });
+            // ✅ MVP: Обработчики событий опциональны для базового wrapper
+            // Если addEventListener поддерживается - добавляем слушатели
+            if (typeof this.controls.addEventListener === 'function') {
+                this.controls.addEventListener('start', () => {
+                    this.isAnimating = true;
+                });
+                
+                this.controls.addEventListener('end', () => {
+                    this.isAnimating = false;
+                });
+                
+                this.controls.addEventListener('change', () => {
+                    this.needsRender = true;
+                });
+                
+                console.log('✓ OrbitControls event listeners added');
+            } else {
+                console.log('✓ OrbitControls без event listeners (базовая версия)');
+            }
         }
 
         // Оптимизированное освещение
