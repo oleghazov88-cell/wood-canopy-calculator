@@ -103,6 +103,8 @@ class CanopyPresenter {
      * Обработчик изменения параметра во View
      */
     onViewParamChanged(key, value) {
+        console.log('📝 CanopyPresenter: параметр изменен:', key, '=', value);
+        
         // Обновляем модель
         this.model.updateParam(key, value);
         
@@ -142,6 +144,8 @@ class CanopyPresenter {
      * Обновление 3D модели с дебаунсингом
      */
     update3DModelDebounced() {
+        console.log('⏳ Запланировано обновление 3D через', this.update3DDelay, 'мс');
+        
         // Отменяем предыдущий таймер
         if (this.update3DTimeout) {
             clearTimeout(this.update3DTimeout);
@@ -150,6 +154,7 @@ class CanopyPresenter {
         // Устанавливаем новый таймер
         this.update3DTimeout = setTimeout(() => {
             const params = this.model.getParams();
+            console.log('🚀 Обновляем 3D с параметрами:', params);
             this.renderer.update(params);
         }, this.update3DDelay);
     }

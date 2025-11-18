@@ -53,7 +53,7 @@ class CanopyView {
                         <input type="radio" class="nc-radio__input" name="type-karkas" value="var-3" id="type-karkas-var-3"
                             ${params.roofType === 'var-3' ? 'checked' : ''}>
                         <label for="type-karkas-var-3" class="nc-radio__label">
-                            <img src="data:image/svg+xml,%3Csvg viewBox='0 0 100 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 50 Q50 15 90 50' fill='none' stroke='%2320B5B9' stroke-width='3'/%3E%3Cline x1='10' y1='50' x2='90' y2='50' stroke='%2320B5B9' stroke-width='3'/%3E%3C/svg%3E" alt="Арочный" class="nc-radio__image">
+                            <img src="data:image/svg+xml,%3Csvg viewBox='0 0 100 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 50 L50 20 L90 50' fill='none' stroke='%2320B5B9' stroke-width='3'/%3E%3Cline x1='50' y1='20' x2='50' y2='50' stroke='%2320B5B9' stroke-width='2.5'/%3E%3Cline x1='10' y1='50' x2='90' y2='50' stroke='%2320B5B9' stroke-width='3'/%3E%3C/svg%3E" alt="Двускатный со стойкой" class="nc-radio__image">
                         </label>
                     </div>
                 </div>
@@ -137,12 +137,40 @@ class CanopyView {
 
             <div class="nc-field">
                 <label class="nc-field__label">Тип раскосов</label>
-                <select class="nc-field__input" id="braceType">
-                    <option value="var-1" ${params.braceType === 'var-1' ? 'selected' : ''}>Стандартный</option>
-                    <option value="var-2" ${params.braceType === 'var-2' ? 'selected' : ''}>Раскос тип 2</option>
-                    <option value="var-3" ${params.braceType === 'var-3' ? 'selected' : ''}>Раскос тип 3</option>
-                    <option value="var-4" ${params.braceType === 'var-4' ? 'selected' : ''}>Раскос тип 4</option>
-                </select>
+                <div class="nc-brace-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-top: 12px;">
+                    <div class="nc-brace-item" style="position: relative;">
+                        <input type="radio" class="nc-brace__input" name="brace-type" value="var-1" id="brace-type-var-1"
+                            ${params.braceType === 'var-1' ? 'checked' : ''} style="position: absolute; opacity: 0; pointer-events: none;">
+                        <label for="brace-type-var-1" style="display: flex; flex-direction: column; align-items: center; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; background: #f7fafc;">
+                            <img src="../raskos/1 (1).webp" alt="Раскос 1" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 11px; color: #4a5568; text-align: center; font-weight: 500;">Тип 1</span>
+                        </label>
+                    </div>
+                    <div class="nc-brace-item" style="position: relative;">
+                        <input type="radio" class="nc-brace__input" name="brace-type" value="var-2" id="brace-type-var-2"
+                            ${params.braceType === 'var-2' ? 'checked' : ''} style="position: absolute; opacity: 0; pointer-events: none;">
+                        <label for="brace-type-var-2" style="display: flex; flex-direction: column; align-items: center; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; background: #f7fafc;">
+                            <img src="../raskos/2 (1).webp" alt="Раскос 2" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 11px; color: #4a5568; text-align: center; font-weight: 500;">Тип 2</span>
+                        </label>
+                    </div>
+                    <div class="nc-brace-item" style="position: relative;">
+                        <input type="radio" class="nc-brace__input" name="brace-type" value="var-3" id="brace-type-var-3"
+                            ${params.braceType === 'var-3' ? 'checked' : ''} style="position: absolute; opacity: 0; pointer-events: none;">
+                        <label for="brace-type-var-3" style="display: flex; flex-direction: column; align-items: center; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; background: #f7fafc;">
+                            <img src="../raskos/3 (1).webp" alt="Раскос 3" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 11px; color: #4a5568; text-align: center; font-weight: 500;">Тип 3</span>
+                        </label>
+                    </div>
+                    <div class="nc-brace-item" style="position: relative;">
+                        <input type="radio" class="nc-brace__input" name="brace-type" value="var-4" id="brace-type-var-4"
+                            ${params.braceType === 'var-4' ? 'checked' : ''} style="position: absolute; opacity: 0; pointer-events: none;">
+                        <label for="brace-type-var-4" style="display: flex; flex-direction: column; align-items: center; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; background: #f7fafc;">
+                            <img src="../raskos/4 (1).webp" alt="Раскос 4" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 11px; color: #4a5568; text-align: center; font-weight: 500;">Тип 4</span>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <div class="nc-field">
@@ -234,12 +262,44 @@ class CanopyView {
             });
         });
 
-        // Радио кнопки
+        // Радио кнопки (типы кровли)
         const radios = this.formElement.querySelectorAll('.nc-radio__input');
+        console.log('🔘 Найдено радиокнопок:', radios.length);
         radios.forEach(radio => {
             radio.addEventListener('change', (e) => {
+                console.log('🔘 Радиокнопка изменена:', e.target.name, '=', e.target.value);
                 if (e.target.checked && this.onParamChanged) {
-                    this.onParamChanged(e.target.name, e.target.value);
+                    // Маппинг имен параметров: type-karkas → roofType
+                    const paramName = e.target.name === 'type-karkas' ? 'roofType' : e.target.name;
+                    console.log('🔘 Отправляем в Presenter:', paramName, '=', e.target.value);
+                    this.onParamChanged(paramName, e.target.value);
+                }
+            });
+        });
+
+        // Радио кнопки раскосов
+        const braceRadios = this.formElement.querySelectorAll('.nc-brace__input');
+        console.log('🔧 Найдено радиокнопок раскосов:', braceRadios.length);
+        braceRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                console.log('🔧 Раскос изменен:', e.target.value);
+                if (e.target.checked && this.onParamChanged) {
+                    this.onParamChanged('braceType', e.target.value);
+                }
+                
+                // Обновляем визуальное выделение
+                const allLabels = this.formElement.querySelectorAll('.nc-brace-item label');
+                allLabels.forEach(label => {
+                    label.style.borderColor = '#e2e8f0';
+                    label.style.background = '#f7fafc';
+                });
+                
+                if (e.target.checked) {
+                    const label = e.target.nextElementSibling;
+                    if (label) {
+                        label.style.borderColor = '#20B5B9';
+                        label.style.background = 'rgba(32, 181, 185, 0.1)';
+                    }
                 }
             });
         });
@@ -366,7 +426,7 @@ class CanopyView {
             'gray': 'Серый',
             'var-1': 'Односкатный',
             'var-2': 'Двускатный',
-            'var-3': 'Арочный'
+            'var-3': 'Двускатный со стойкой'
         };
         
         const postSectionNames = {

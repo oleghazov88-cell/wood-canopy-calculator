@@ -17,83 +17,6 @@
             transform: translateZ(0);
         }
         
-        /* Панель мониторинга производительности */
-        .performance-panel {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 12px;
-            z-index: 1000;
-            min-width: 200px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .performance-panel.hidden {
-            display: none;
-        }
-        
-        .performance-stats {
-            margin-bottom: 8px;
-        }
-        
-        .performance-stat {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
-        }
-        
-        .performance-stat-label {
-            color: #ccc;
-        }
-        
-        .performance-stat-value {
-            color: #fff;
-            font-weight: bold;
-        }
-        
-        .performance-controls {
-            border-top: 1px solid #444;
-            padding-top: 8px;
-            margin-top: 8px;
-        }
-        
-        .quality-selector {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 8px;
-        }
-        
-        .quality-btn {
-            padding: 4px 8px;
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 10px;
-        }
-        
-        .quality-btn.active {
-            background: #20B5B9;
-            border-color: #20B5B9;
-        }
-        
-        .performance-toggle {
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            border-radius: 4px;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-size: 10px;
-            width: 100%;
-        }
-        
         .naves-calc__view {
             position: relative;
             overflow: hidden;
@@ -101,8 +24,7 @@
         
         /* СТИЛИ ДЛЯ ОТЛАДКИ И РАЗРАБОТКИ */
         .debug-layout {
-            display: none; /* ВРЕМЕННО СКРЫТ */
-            /* display: flex; */
+            display: none; /* ОТЛАДОЧНЫЙ РЕЖИМ ОТКЛЮЧЁН */
             gap: 20px;
             padding: 20px;
             background: #f5f5f5;
@@ -274,11 +196,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-        }
-        
-        /* СКРЫТИЕ РАСКОСОВ НА ВРЕМЯ ОТЛАДКИ */
-        .debug-braces-hidden {
-            display: none !important;
         }
         
         /* Стили для правого блока с 3D по аналогии с test.html */
@@ -699,14 +616,65 @@
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <div style="width: 60px; height: 40px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
                                     <svg viewBox="0 0 100 60" style="width: 50px; height: 30px;">
-                                        <path d="M10 50 Q50 15 90 50" fill="none" stroke="#20B5B9" stroke-width="3"/>
+                                        <path d="M10 50 L50 20 L90 50" fill="none" stroke="#20B5B9" stroke-width="3"/>
+                                        <line x1="50" y1="20" x2="50" y2="50" stroke="#20B5B9" stroke-width="2.5"/>
                                         <line x1="10" y1="50" x2="90" y2="50" stroke="#20B5B9" stroke-width="3"/>
                                     </svg>
                                 </div>
                                 <div>
-                                    <div style="font-weight: 600; color: #333;">Арочный</div>
-                                    <div style="font-size: 11px; color: #666;">Треугольная ферма без стойки</div>
+                                    <div style="font-weight: 600; color: #333;">Двускатный со стойкой</div>
+                                    <div style="font-size: 11px; color: #666;">Треугольная ферма с центральной стойкой</div>
                                 </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- РАСКОСЫ -->
+            <div class="debug-brace-buttons" style="margin-top: 20px;">
+                <h3>🔧 Тип раскосов</h3>
+                <div class="debug-brace-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="debug-brace-item" style="padding: 10px; border: 2px solid #20B5B9; border-radius: 8px; cursor: pointer; transition: all 0.3s; background: #f0fbfb;" onclick="selectBraceType(this, 'var-1')">
+                        <input type="radio" name="debug-type-raskosi" id="debug-raskos-var-1" value="var-1" checked style="display: none;">
+                        <label for="debug-raskos-var-1" style="cursor: pointer; display: block;">
+                            <div style="text-align: center;">
+                                <img src="../raskos/1 (1).webp" alt="Раскос 1" style="width: 100%; height: 80px; object-fit: cover; border-radius: 4px; margin-bottom: 8px;">
+                                <div style="font-weight: 600; color: #333; font-size: 12px;">var-1</div>
+                                <div style="font-size: 10px; color: #666;">Диагональные раскосы</div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="debug-brace-item" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.3s;" onclick="selectBraceType(this, 'var-2')">
+                        <input type="radio" name="debug-type-raskosi" id="debug-raskos-var-2" value="var-2" style="display: none;">
+                        <label for="debug-raskos-var-2" style="cursor: pointer; display: block;">
+                            <div style="text-align: center;">
+                                <img src="../raskos/2 (1).webp" alt="Раскос 2" style="width: 100%; height: 80px; object-fit: cover; border-radius: 4px; margin-bottom: 8px;">
+                                <div style="font-weight: 600; color: #333; font-size: 12px;">var-2</div>
+                                <div style="font-size: 10px; color: #666;">Крестообразные раскосы</div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="debug-brace-item" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.3s;" onclick="selectBraceType(this, 'var-3')">
+                        <input type="radio" name="debug-type-raskosi" id="debug-raskos-var-3" value="var-3" style="display: none;">
+                        <label for="debug-raskos-var-3" style="cursor: pointer; display: block;">
+                            <div style="text-align: center;">
+                                <img src="../raskos/3 (1).webp" alt="Раскос 3" style="width: 100%; height: 80px; object-fit: cover; border-radius: 4px; margin-bottom: 8px;">
+                                <div style="font-weight: 600; color: #333; font-size: 12px;">var-3</div>
+                                <div style="font-size: 10px; color: #666;">Двойные раскосы</div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="debug-brace-item" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.3s;" onclick="selectBraceType(this, 'var-4')">
+                        <input type="radio" name="debug-type-raskosi" id="debug-raskos-var-4" value="var-4" style="display: none;">
+                        <label for="debug-raskos-var-4" style="cursor: pointer; display: block;">
+                            <div style="text-align: center;">
+                                <img src="../raskos/4 (1).webp" alt="Раскос 4" style="width: 100%; height: 80px; object-fit: cover; border-radius: 4px; margin-bottom: 8px;">
+                                <div style="font-weight: 600; color: #333; font-size: 12px;">var-4</div>
+                                <div style="font-size: 10px; color: #666;">Угловые раскосы</div>
                             </div>
                         </label>
                     </div>
@@ -824,41 +792,6 @@
                         <div class="images-block flex aic jcc posr bg-f9 round-10">
                             <canvas id="nc-canvas" style="width: 100%; height: 100%;"></canvas>
                         
-                        <!-- Панель мониторинга производительности -->
-                        <div id="performance-panel" class="performance-panel">
-                            <div class="performance-stats">
-                                <div class="performance-stat">
-                                    <span class="performance-stat-label">FPS:</span>
-                                    <span class="performance-stat-value" id="fps-value">60</span>
-                                </div>
-                                <div class="performance-stat">
-                                    <span class="performance-stat-label">Frame Time:</span>
-                                    <span class="performance-stat-value" id="frame-time-value">16.7ms</span>
-                                </div>
-                                <div class="performance-stat">
-                                    <span class="performance-stat-label">Triangles:</span>
-                                    <span class="performance-stat-value" id="triangles-value">0</span>
-                                </div>
-                                <div class="performance-stat">
-                                    <span class="performance-stat-label">Draw Calls:</span>
-                                    <span class="performance-stat-value" id="draw-calls-value">0</span>
-                                </div>
-                                <div class="performance-stat">
-                                    <span class="performance-stat-label">Quality:</span>
-                                    <span class="performance-stat-value" id="quality-value">High</span>
-                                </div>
-                            </div>
-                            
-                            <div class="performance-controls">
-                                <div class="quality-selector">
-                                    <button class="quality-btn" data-quality="low">Low</button>
-                                    <button class="quality-btn active" data-quality="medium">Med</button>
-                                    <button class="quality-btn" data-quality="high">High</button>
-                                </div>
-                                <button class="performance-toggle" onclick="togglePerformancePanel()">Скрыть</button>
-                            </div>
-                        </div>
-                        
                         <div class="images-button absolute">
                             <div class="link-360 flex aic pointer fz15">
                                 <span style="font-size: 20px; margin-right: 5px;">🔄</span>
@@ -964,8 +897,8 @@
                         </div>
                     </div>
 
-                    <div class="label_cl fz18 fw600 mb-20 debug-braces-hidden">Раскосы</div>
-                    <div class="type-row-raido debug-braces-hidden">
+                    <div class="label_cl fz18 fw600 mb-20">Раскосы</div>
+                    <div class="type-row-raido">
                         <div class="type-row-raido-col">
                             <div class="raido-image">
                                 <input checked type="radio" name="type-raskosi" id="type-raskosi-var-1">
@@ -1274,7 +1207,7 @@
                     </ul>
                 </dd>
             </dl>
-            <dl class="debug-braces-hidden">
+            <dl>
                 <dt class="flex aic f2 pointer">
                     <div class="num">04.</div>
                     <div class="name">Раскосы</div>
@@ -1319,24 +1252,40 @@
     <!-- ====================================== -->
     
     <!-- Модули расширенной функциональности -->
-    <script src="/naves-calc/assets/js/storage-manager.js"></script>
-    <script src="/naves-calc/assets/js/order-manager.js"></script>
-    <script src="/naves-calc/assets/js/pdf-export.js"></script>
+    <script src="assets/js/storage-manager.js"></script>
+    <script src="assets/js/order-manager.js"></script>
+    <script src="assets/js/pdf-export.js"></script>
     
     <!-- MVP Core Components -->
-    <script src="/naves-calc/assets/js/mvp/CanopyModel.js"></script>
-    <script src="/naves-calc/assets/js/mvp/CanopyView.js"></script>
+    <script src="assets/js/mvp/CanopyModel.js"></script>
+    <script src="assets/js/mvp/CanopyView.js"></script>
     
     <!-- Three.js Dependencies -->
-    <script src="/naves-calc/assets/libs/three/three.min.js"></script>
-    <script src="/naves-calc/assets/libs/three/OrbitControls-wrapper.js"></script>
+    <script src="assets/libs/three/three.min.js"></script>
+    <script src="assets/libs/three/OrbitControls-wrapper.js"></script>
+    <!-- GLTFLoader для загрузки 3D моделей раскосов -->
+    <script src="assets/libs/three/GLTFLoader.js"></script>
+    
+    <!-- Проверка загрузки THREE.js библиотек -->
+    <script>
+        console.log('🔍 Проверка загрузки THREE.js библиотек:');
+        console.log('  THREE:', typeof THREE !== 'undefined' ? '✅' : '❌');
+        console.log('  THREE.OrbitControls:', typeof THREE.OrbitControls !== 'undefined' ? '✅' : '❌');
+        console.log('  THREE.GLTFLoader:', typeof THREE.GLTFLoader !== 'undefined' ? '✅' : '❌');
+        
+        if (typeof THREE.GLTFLoader === 'undefined') {
+            console.error('❌ КРИТИЧНО: THREE.GLTFLoader не загружен! Проверьте файл GLTFLoader.js');
+        } else {
+            console.log('✅ Все библиотеки THREE.js загружены успешно');
+        }
+    </script>
     
     <!-- MVP Renderer & Presenter -->
-    <script src="/naves-calc/assets/js/mvp/Canopy3DRenderer.js"></script>
-    <script src="/naves-calc/assets/js/mvp/CanopyPresenter.js"></script>
+    <script src="assets/js/mvp/Canopy3DRenderer.js"></script>
+    <script src="assets/js/mvp/CanopyPresenter.js"></script>
     
     <!-- MVP App Initialization -->
-    <script src="/naves-calc/assets/js/mvp/app.js"></script>
+    <script src="assets/js/mvp/app.js"></script>
     
     <script>
         window.addEventListener('DOMContentLoaded', () => {
@@ -1648,11 +1597,8 @@
             
             if (trussMaterialSelect) {
                 trussMaterialSelect.addEventListener('change', function() {
-                    if (window.NavesCalc) {
-                        window.NavesCalc.params.trussMaterial = this.value;
-                        window.NavesCalc.update3DModel();
-                        window.NavesCalc.calculateTotal();
-                        window.NavesCalc.updateSpecification();
+                    if (window.CanopyApp && window.CanopyApp.presenter) {
+                        window.CanopyApp.presenter.onViewParamChanged('trussMaterial', this.value);
                     }
                 });
             }
@@ -2193,63 +2139,6 @@
                     alert('3D модель не готова для скачивания');
                 }
             };
-            
-            // Функции для панели мониторинга производительности
-            window.togglePerformancePanel = function() {
-                const panel = document.getElementById('performance-panel');
-                const button = document.querySelector('.performance-toggle');
-                
-                if (panel.classList.contains('hidden')) {
-                    panel.classList.remove('hidden');
-                    button.textContent = 'Скрыть';
-                } else {
-                    panel.classList.add('hidden');
-                    button.textContent = 'Показать';
-                }
-            };
-            
-            // Инициализация панели мониторинга
-            function initPerformancePanel() {
-                // Обработчики для кнопок качества
-                const qualityButtons = document.querySelectorAll('.quality-btn');
-                qualityButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        const quality = this.dataset.quality;
-                        
-                        // Убираем активный класс со всех кнопок
-                        qualityButtons.forEach(btn => btn.classList.remove('active'));
-                        // Добавляем активный класс к выбранной кнопке
-                        this.classList.add('active');
-                        
-                        // Устанавливаем качество в калькуляторе
-                        if (window.NavesCalc) {
-                            window.NavesCalc.setQualityLevelManual(quality);
-                        }
-                    });
-                });
-                
-                // Обновление статистики производительности
-                function updatePerformanceStats() {
-                    if (window.NavesCalc) {
-                        const stats = window.NavesCalc.getPerformanceStats();
-                        
-                        document.getElementById('fps-value').textContent = stats.fps;
-                        document.getElementById('frame-time-value').textContent = stats.frameTime.toFixed(1) + 'ms';
-                        document.getElementById('triangles-value').textContent = stats.triangleCount.toLocaleString();
-                        document.getElementById('draw-calls-value').textContent = stats.drawCalls;
-                        document.getElementById('quality-value').textContent = stats.qualityLevel.charAt(0).toUpperCase() + stats.qualityLevel.slice(1);
-                    }
-                    
-                    // Обновляем каждые 500ms
-                    setTimeout(updatePerformanceStats, 500);
-                }
-                
-                // Запускаем обновление статистики
-                updatePerformanceStats();
-            }
-            
-            // Инициализируем панель мониторинга после загрузки калькулятора
-            setTimeout(initPerformancePanel, 1000);
         }
         
         
@@ -2316,6 +2205,8 @@
         
         // Функция выбора сечения балок
         window.selectBeam = function(element, value) {
+            console.log('🔨 Выбор сечения балок:', value);
+            
             // Убираем выделение со всех элементов
             const allBeamItems = document.querySelectorAll('.debug-beam-item');
             allBeamItems.forEach(item => item.classList.remove('selected'));
@@ -2329,12 +2220,14 @@
                 radio.checked = true;
             }
             
-            // Обновляем значение в калькуляторе
-            if (window.NavesCalc) {
-                window.NavesCalc.params.trussMaterial = value;
-                window.NavesCalc.update3DModel();
-                window.NavesCalc.calculateTotal();
-                window.NavesCalc.updateSpecification();
+            // Обновляем значение через MVP Presenter (правильный способ)
+            if (window.CanopyApp && window.CanopyApp.presenter) {
+                console.log('✅ Обновление через CanopyApp.presenter');
+                
+                // Обновляем через Presenter - это правильно обновит Model, View и Renderer
+                window.CanopyApp.presenter.onViewParamChanged('trussMaterial', value);
+                
+                console.log('Текущие параметры:', window.CanopyApp.model.params);
                 
                 // Обновляем отображение в информационном блоке
                 const beamSectionEl = document.getElementById('debug-beam-section');
@@ -2348,13 +2241,19 @@
                 if (trussMaterialSelect) {
                     trussMaterialSelect.value = value;
                 }
+                
+                console.log('✅ Сечение балок обновлено через MVP');
+            } else {
+                console.error('❌ CanopyApp.presenter не найден');
             }
             
-            console.log('Выбрано сечение балок:', value);
+            console.log('Выбрано сечение балок (trussMaterial):', value);
         };
         
         // Функция выбора типа ферм (форма кровли)
         window.selectTrussType = function(element, value) {
+            console.log('🏗️ Выбор типа ферм:', value);
+            
             // Убираем выделение со всех элементов
             const allTrussItems = document.querySelectorAll('.debug-truss-item');
             allTrussItems.forEach(item => {
@@ -2372,9 +2271,14 @@
                 radio.checked = true;
             }
             
-            // Обновляем значение в калькуляторе
-            if (window.NavesCalc) {
-                window.NavesCalc.params.trussType = value;
+            // Обновляем значение через MVP Presenter (правильный способ)
+            if (window.CanopyApp && window.CanopyApp.presenter) {
+                console.log('✅ Обновление через CanopyApp.presenter');
+                
+                // ВАЖНО: параметр называется roofType, не trussType!
+                window.CanopyApp.presenter.onViewParamChanged('roofType', value);
+                
+                console.log('Текущие параметры:', window.CanopyApp.model.params);
                 
                 // Обновляем все радиокнопки типа ферм
                 const trussTypeRadios = document.querySelectorAll('input[name="type-karkas"]');
@@ -2384,13 +2288,85 @@
                     }
                 });
                 
-                // Перерисовываем модель
-                window.NavesCalc.update3DModel();
-                window.NavesCalc.calculateTotal();
-                window.NavesCalc.updateSpecification();
+                // Также обновляем радиокнопки в основном интерфейсе MVP
+                const mvpRoofRadios = document.querySelectorAll('.nc-radio__input[name="type-karkas"]');
+                mvpRoofRadios.forEach(radio => {
+                    if (radio.value === value) {
+                        radio.checked = true;
+                    }
+                });
+                
+                console.log('✅ Тип ферм обновлен через MVP');
+            } else {
+                console.error('❌ CanopyApp.presenter не найден');
             }
             
-            console.log('Выбран тип ферм:', value);
+            console.log('Выбран тип ферм (roofType):', value);
+        };
+        
+        // Функция выбора типа раскосов
+        window.selectBraceType = function(element, value) {
+            console.log('🔧 Выбор раскоса:', value);
+            
+            // Убираем выделение со всех элементов
+            const allBraceItems = document.querySelectorAll('.debug-brace-item');
+            allBraceItems.forEach(item => {
+                item.style.border = '2px solid #ddd';
+                item.style.background = 'transparent';
+            });
+            
+            // Выделяем выбранный элемент
+            element.style.border = '2px solid #20B5B9';
+            element.style.background = '#f0fbfb';
+            
+            // Отмечаем radio кнопку
+            const radio = element.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+            }
+            
+            // Обновляем значение через MVP Presenter (правильный способ)
+            if (window.CanopyApp && window.CanopyApp.presenter) {
+                console.log('✅ Обновление через CanopyApp.presenter');
+                
+                // Обновляем через Presenter - это правильно обновит Model, View и Renderer
+                window.CanopyApp.presenter.onViewParamChanged('braceType', value);
+                
+                console.log('Текущие параметры:', window.CanopyApp.model.params);
+                
+                // Обновляем все радиокнопки типа раскосов
+                const braceTypeRadios = document.querySelectorAll('input[name="type-raskosi"]');
+                braceTypeRadios.forEach(radio => {
+                    if (radio.value === value || radio.id.includes(value)) {
+                        radio.checked = true;
+                    }
+                });
+                
+                // Также обновляем радиокнопки в основном интерфейсе MVP
+                const mvpBraceRadios = document.querySelectorAll('.nc-brace__input');
+                mvpBraceRadios.forEach(radio => {
+                    if (radio.value === value) {
+                        radio.checked = true;
+                        // Обновляем визуальное выделение в MVP интерфейсе
+                        const label = radio.nextElementSibling;
+                        if (label) {
+                            const allLabels = document.querySelectorAll('.nc-brace-item label');
+                            allLabels.forEach(l => {
+                                l.style.borderColor = '#e2e8f0';
+                                l.style.background = '#f7fafc';
+                            });
+                            label.style.borderColor = '#20B5B9';
+                            label.style.background = 'rgba(32, 181, 185, 0.1)';
+                        }
+                    }
+                });
+                
+                console.log('✅ Раскос обновлен через MVP');
+            } else {
+                console.error('❌ CanopyApp.presenter не найден');
+            }
+            
+            console.log('Выбран тип раскосов:', value);
         };
         
         // Инициализация выбора балок по умолчанию при загрузке
@@ -2402,6 +2378,34 @@
                     parent.classList.add('selected');
                 }
             }
+        }
+        
+        // Инициализация выбора раскосов по умолчанию при загрузке
+        function initBraceSelection() {
+            console.log('🔧 Инициализация выбора раскосов...');
+            
+            // Получаем текущий тип раскоса из NavesCalc
+            let currentBraceType = 'var-1'; // по умолчанию
+            if (window.NavesCalc && window.NavesCalc.params && window.NavesCalc.params.braceType) {
+                currentBraceType = window.NavesCalc.params.braceType;
+            }
+            
+            console.log('Текущий тип раскоса:', currentBraceType);
+            
+            // Выделяем соответствующий элемент в отладочном интерфейсе
+            const allBraceItems = document.querySelectorAll('.debug-brace-item');
+            allBraceItems.forEach(item => {
+                const radio = item.querySelector('input[type="radio"]');
+                if (radio && radio.value === currentBraceType) {
+                    item.style.border = '2px solid #20B5B9';
+                    item.style.background = '#f0fbfb';
+                    radio.checked = true;
+                    console.log('✅ Выделен раскос:', currentBraceType);
+                } else {
+                    item.style.border = '2px solid #ddd';
+                    item.style.background = 'transparent';
+                }
+            });
         }
         
         // ФУНКЦИИ ДЛЯ БЕГУНКОВ (ПАРАМЕТРЫ КОНСТРУКЦИИ)
@@ -2472,16 +2476,79 @@
             }
         }
         
+        // Инициализация отладочного 3D окна
+        function initDebug3D() {
+            console.log('🔧 Инициализация отладочного 3D окна...');
+            
+            if (!window.CanopyApp || !window.CanopyApp.renderer) {
+                console.error('❌ CanopyApp не найден');
+                return;
+            }
+            
+            const debugCanvas = document.getElementById('debug-canvas');
+            if (!debugCanvas) {
+                console.error('❌ Debug canvas не найден');
+                return;
+            }
+            
+            try {
+                // Переподключаем рендерер к отладочному canvas
+                const renderer = window.CanopyApp.renderer;
+                
+                // Сохраняем ссылку на старый canvas
+                const oldCanvas = renderer.canvasElement;
+                
+                // Обновляем canvas элемент
+                renderer.canvasElement = debugCanvas;
+                
+                // Переподключаем WebGL рендерер
+                if (renderer.renderer) {
+                    const container = debugCanvas.parentElement;
+                    container.removeChild(debugCanvas);
+                    
+                    // Удаляем старый DOM элемент рендерера
+                    const oldRendererElement = renderer.renderer.domElement;
+                    if (oldRendererElement && oldRendererElement.parentElement) {
+                        oldRendererElement.parentElement.removeChild(oldRendererElement);
+                    }
+                    
+                    // Присоединяем новый canvas
+                    container.appendChild(renderer.renderer.domElement);
+                    
+                    // Обновляем размеры
+                    const rect = container.getBoundingClientRect();
+                    renderer.renderer.setSize(rect.width, rect.height);
+                    renderer.camera.aspect = rect.width / rect.height;
+                    renderer.camera.updateProjectionMatrix();
+                    
+                    // Обновляем контроллы
+                    if (renderer.controls) {
+                        renderer.controls.update();
+                    }
+                    
+                    // Перерендериваем сцену
+                    renderer.renderer.render(renderer.scene, renderer.camera);
+                    
+                    console.log('✅ Отладочное 3D окно активировано');
+                } else {
+                    console.error('❌ Рендерер не инициализирован');
+                }
+            } catch (error) {
+                console.error('❌ Ошибка инициализации отладочного 3D:', error);
+            }
+        }
+        
         // Инициализация отладочных кнопок после загрузки DOM
-        // ВРЕМЕННО ОТКЛЮЧЕНО (режим отладки скрыт)
-        /*
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initDebugButtons, 1000);
-            setTimeout(initBeamSelection, 1100);
-            setTimeout(initTrussSelection, 1150);
-            setTimeout(updateDebugInfo, 1200); // Обновляем информационный блок
-        });
-        */
+        // ОТЛАДОЧНЫЙ РЕЖИМ ОТКЛЮЧЁН
+        // Чтобы включить отладку - раскомментируйте код ниже:
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     setTimeout(initDebug3D, 500);         // Инициализация 3D окна
+        //     setTimeout(initDebugButtons, 1000);
+        //     setTimeout(initBeamSelection, 1100);
+        //     setTimeout(initTrussSelection, 1150);
+        //     setTimeout(initBraceSelection, 1180); // Инициализация выбора раскосов
+        //     setTimeout(updateDebugInfo, 1200);    // Обновляем информационный блок
+        // });
     </script>
     
 </body>

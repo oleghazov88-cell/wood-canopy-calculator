@@ -11,7 +11,7 @@
 class CanopyModel {
     constructor() {
         this.config = {
-            pricesUrl: '/naves-calc/upload/naves/prices.json',
+            pricesUrl: 'upload/naves/prices.json',
             defaultParams: {
                 length: 110, // в дециметрах (11.0 м)
                 width: 60,   // в дециметрах (6.0 м)

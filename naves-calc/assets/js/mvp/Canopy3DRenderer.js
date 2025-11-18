@@ -21,7 +21,7 @@ class Canopy3DRenderer {
         // ✅ Проверка перенесена в метод init() для избежания ошибок при ранней инициализации
         
         this.config = {
-            pricesUrl: '/naves-calc/upload/naves/prices.json',
+            pricesUrl: 'upload/naves/prices.json',
             defaultParams: {
                 length: 110, // в дециметрах (11.0 м)
                 width: 60,   // в дециметрах (6.0 м)
@@ -49,6 +49,8 @@ class Canopy3DRenderer {
         this.prices = {};
         this.glbCache = {}; // Кэш для GLB моделей
         this.crossbarMaterial = null; // Материал для перемычек
+        this.roofMaterialCache = new Map(); // Кэш для материалов кровли
+        this.currentRoofGroup = null; // Текущая группа кровли для замены
         
         // Three.js переменные
         this.scene = null;
@@ -99,8 +101,12 @@ class Canopy3DRenderer {
     // MVP метод update - обновление 3D модели с новыми параметрами
     update(params) {
         try {
+            console.log('🔄 Canopy3DRenderer.update() вызван с параметрами:', params);
+            
             // Обновляем внутренние параметры
             Object.assign(this.params, params);
+            
+            console.log('✅ Параметры обновлены. Текущий roofType:', this.params.roofType);
             
             // Обновляем currentPostSpacing для корректного расчета
             if (params.postSpacing !== undefined) {
@@ -108,6 +114,7 @@ class Canopy3DRenderer {
             }
             
             // Перерисовываем 3D модель
+            console.log('🎨 Вызываем update3DModel()...');
             this.update3DModel();
             
         } catch (error) {
@@ -180,22 +187,45 @@ class Canopy3DRenderer {
     // Загрузка GLB модели раскоса
     async loadBraceGLB(braceType) {
         if (braceType === 'var-1') {
+            console.log('   Раскос var-1: используем простые геометрические формы');
             return null; // Стандартный раскос
         }
         
         // Проверяем кэш
         const cacheKey = `brace_${braceType}`;
         if (this.glbCache[cacheKey]) {
+            console.log(`   Раскос ${braceType}: загружен из кэша`);
             return this.glbCache[cacheKey];
         }
         
+        // Путь к GLB файлам относительно корня сайта
+        // Путь относительно naves-calc/index.html
         const glbFile = `../raskos/r${braceType.replace('var-', '')}.glb`;
         
-        return new Promise((resolve, reject) => {
+        console.log(`🔍 Пытаемся загрузить раскос ${braceType} из файла:`, glbFile);
+        console.log(`   Текущая страница:`, window.location.href);
+        
+        return new Promise((resolve) => {
+            // Проверяем, доступен ли GLTFLoader
+            if (typeof THREE.GLTFLoader === 'undefined') {
+                console.error('❌ GLTFLoader недоступен! Проверьте подключение библиотеки');
+                resolve(null);
+                return;
+            }
+            
+            console.log('✓ GLTFLoader доступен, начинаем загрузку...');
             const loader = new THREE.GLTFLoader();
+            
+            // Устанавливаем таймаут для загрузки (5 секунд)
+            const timeout = setTimeout(() => {
+                console.error(`❌ ТАЙМАУТ загрузки ${glbFile} (5 сек), используем простые балки`);
+                resolve(null);
+            }, 5000);
+            
             loader.load(
                 glbFile,
                 (gltf) => {
+                    clearTimeout(timeout);
                     const model = gltf.scene;
                     model.scale.set(1, 1, 1);
                     model.castShadow = true;
@@ -203,14 +233,23 @@ class Canopy3DRenderer {
                     
                     // Сохраняем в кэш
                     this.glbCache[cacheKey] = model;
+                    console.log(`✅✅✅ Раскос ${braceType}: GLB модель УСПЕШНО загружена!`);
                     resolve(model);
                 },
                 (progress) => {
-                    console.log('Загрузка раскоса:', (progress.loaded / progress.total * 100) + '%');
+                    // Прогресс загрузки
+                    if (progress.lengthComputable) {
+                        const percent = (progress.loaded / progress.total * 100).toFixed(0);
+                        console.log(`   Загрузка ${braceType}: ${percent}%`);
+                    }
                 },
                 (error) => {
-                    console.error('Ошибка загрузки раскоса:', error);
-                    resolve(null); // Возвращаем null при ошибке
+                    clearTimeout(timeout);
+                    console.error(`❌❌❌ ОШИБКА загрузки ${glbFile}:`, error);
+                    console.error('   Детали ошибки:', error.message);
+                    console.error('   Используем простые балки вместо GLB модели');
+                    // Всегда возвращаем null при ошибке, чтобы не блокировать создание модели
+                    resolve(null);
                 }
             );
         });
@@ -270,7 +309,7 @@ class Canopy3DRenderer {
                     <div class="nc-radio">
                         <input type="radio" class="nc-radio__input" name="type-karkas" value="var-3" id="type-karkas-var-3">
                         <label for="type-karkas-var-3" class="nc-radio__label">
-                            <img src="data:image/svg+xml,%3Csvg viewBox='0 0 100 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 50 Q50 15 90 50' fill='none' stroke='%2320B5B9' stroke-width='3'/%3E%3Cline x1='10' y1='50' x2='90' y2='50' stroke='%2320B5B9' stroke-width='3'/%3E%3C/svg%3E" alt="Арочный" class="nc-radio__image">
+                            <img src="data:image/svg+xml,%3Csvg viewBox='0 0 100 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 50 L50 20 L90 50' fill='none' stroke='%2320B5B9' stroke-width='3'/%3E%3Cline x1='50' y1='20' x2='50' y2='50' stroke='%2320B5B9' stroke-width='2.5'/%3E%3Cline x1='10' y1='50' x2='90' y2='50' stroke='%2320B5B9' stroke-width='3'/%3E%3C/svg%3E" alt="Двускатный со стойкой" class="nc-radio__image">
                         </label>
                     </div>
                 </div>
@@ -725,10 +764,10 @@ class Canopy3DRenderer {
             this.performanceStats.fps = Math.round(1000 / deltaTime);
             this.performanceStats.lastFPSUpdate = currentTime;
             
-            // Логируем производительность в консоль (можно убрать в продакшене)
-            if (this.performanceStats.fps < 30) {
-                console.warn(`Низкий FPS: ${this.performanceStats.fps}. Рекомендуется снизить качество.`);
-            }
+            // Логируем производительность в консоль (отключено в продакшене)
+            // if (this.performanceStats.fps < 30) {
+            //     console.warn(`Низкий FPS: ${this.performanceStats.fps}. Рекомендуется снизить качество.`);
+            // }
         }
         
         // Обновляем количество треугольников и draw calls
@@ -743,18 +782,21 @@ class Canopy3DRenderer {
         const fps = this.performanceStats.fps;
         const frameTime = this.performanceStats.frameTime;
         
-        // Если FPS падает ниже 30, снижаем качество
-        if (fps < 30 && this.qualitySettings.level !== 'low') {
-            this.setQualityLevel('low');
-        }
-        // Если FPS выше 50, можем повысить качество
-        else if (fps > 50 && this.qualitySettings.level === 'low') {
-            this.setQualityLevel('medium');
-        }
-        // Если FPS стабильно выше 55, устанавливаем высокое качество
-        else if (fps > 55 && this.qualitySettings.level === 'medium') {
-            this.setQualityLevel('high');
-        }
+        // ОТКЛЮЧЕНО: Автоматическое переключение качества
+        // Если нужно включить - раскомментируйте код ниже
+        
+        // // Если FPS падает ниже 30, снижаем качество
+        // if (fps < 30 && this.qualitySettings.level !== 'low') {
+        //     this.setQualityLevel('low');
+        // }
+        // // Если FPS выше 50, можем повысить качество
+        // else if (fps > 50 && this.qualitySettings.level === 'low') {
+        //     this.setQualityLevel('medium');
+        // }
+        // // Если FPS стабильно выше 55, устанавливаем высокое качество
+        // else if (fps > 55 && this.qualitySettings.level === 'medium') {
+        //     this.setQualityLevel('high');
+        // }
     }
     
     // Установка уровня качества
@@ -821,9 +863,11 @@ class Canopy3DRenderer {
 
     // Обработка изменения размера
     handleResize() {
-        if (!this.camera || !this.renderer) return;
+        if (!this.camera || !this.renderer || !this.canvasElement) return;
         
         const container = this.canvasElement.parentElement;
+        if (!container) return; // Защита от null
+        
         this.camera.aspect = container.clientWidth / container.clientHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(container.clientWidth, container.clientHeight);
@@ -844,6 +888,12 @@ class Canopy3DRenderer {
     async update3DModel() {
         if (!this.canopyGroup) return;
 
+        console.log('🔄 update3DModel() вызван');
+        console.log('📦 Текущие параметры:');
+        console.log('   roofType:', this.params.roofType);
+        console.log('   braceType:', this.params.braceType);
+        console.log('   postType:', this.params.postType);
+
         // Показываем индикатор загрузки
         this.showLoadingIndicator();
 
@@ -862,6 +912,9 @@ class Canopy3DRenderer {
 
     // Освобождение памяти от предыдущей модели с оптимизацией
     disposeModel() {
+        const childCountBefore = this.canopyGroup.children.length;
+        console.log('🧹 Очищаем модель, элементов:', childCountBefore);
+        
         while (this.canopyGroup.children.length > 0) {
             const child = this.canopyGroup.children[0];
             this.canopyGroup.remove(child);
@@ -884,6 +937,8 @@ class Canopy3DRenderer {
                 }
             }
         }
+        
+        console.log('✅ Модель очищена');
     }
 
     // Проверка, находится ли геометрия в кэше
@@ -986,40 +1041,90 @@ class Canopy3DRenderer {
 
     // Создание модели
     async createModel() {
-        // Получение параметров
-        const length = this.params.length / 10; // конвертация в метры
-        const width = this.params.width / 10;
-        const height = this.params.height / 10;
-        const roofHeight = this.params.roofHeight / 10;
-        const frontBeamExtension = this.params.frontBeamExtension / 1000;
-        const backBeamExtension = this.params.backBeamExtension / 1000;
-        
-        // ✅ MVP: Используем параметры напрямую, без обращения к форме
-        const roofType = this.params.roofType || 'var-2';
-        const postType = this.params.postType || 'var-1';
-        const braceType = this.params.braceType || 'var-1';
-        const postMaterial = this.params.postMaterial || 'glued-150x150';
-        const trussMaterial = this.params.trussMaterial || 'planed-45x190';
-        const frameMaterial = this.params.frameMaterial || 'pine';
-        const frameColoring = this.params.frameColoring || 'no-coloring';
-        const roofingMaterial = this.params.roofingMaterial || 'metal-grandline';
-        const roofColor = this.params.roofColor || 'amber';
+        try {
+            console.log('🏗️ Начинаем создание модели...');
+            
+            // Получение параметров
+            const length = this.params.length / 10; // конвертация в метры
+            const width = this.params.width / 10;
+            const height = this.params.height / 10;
+            const roofHeight = this.params.roofHeight / 10;
+            const frontBeamExtension = this.params.frontBeamExtension / 1000;
+            const backBeamExtension = this.params.backBeamExtension / 1000;
+            
+            // ✅ MVP: Используем параметры напрямую, без обращения к форме
+            const roofType = this.params.roofType || 'var-2';
+            const postType = this.params.postType || 'var-1';
+            const braceType = this.params.braceType || 'var-1';
+            const postMaterial = this.params.postMaterial || 'glued-150x150';
+            const trussMaterial = this.params.trussMaterial || 'planed-45x190';
+            const frameMaterial = this.params.frameMaterial || 'pine';
+            const frameColoring = this.params.frameColoring || 'no-coloring';
+            const roofingMaterial = this.params.roofingMaterial || 'metal-grandline';
+            const roofColor = this.params.roofColor || 'amber';
 
-        // Материалы
-        const woodMaterial = this.createWoodMaterial(frameMaterial, frameColoring);
-        const metalMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x555555,
-            metalness: 0.8,
-            roughness: 0.2
-        });
+            console.log('📐 Параметры модели:', {
+                length, width, height, roofHeight,
+                roofType, postType, braceType,
+                postMaterial, trussMaterial, roofingMaterial
+            });
 
-        // Создание элементов навеса
-        await this.createPosts(length, width, height, woodMaterial, metalMaterial, postType, postMaterial);
-        this.createLongitudinalBeams(length, width, height, woodMaterial, frontBeamExtension, backBeamExtension, postMaterial, postType);
-        // ОТКЛЮЧЕНО НА ВРЕМЯ ОТЛАДКИ: await this.createBeamBraces(length, width, height, woodMaterial, frontBeamExtension, backBeamExtension, postMaterial, braceType, postType);
-        await this.createTrusses(length, width, height, roofHeight, woodMaterial, roofType, braceType, postMaterial, trussMaterial, postType);
-        this.createRoofCovering(length, width, height, roofHeight, roofingMaterial, frontBeamExtension, backBeamExtension, roofType, roofColor, trussMaterial, postType);
-        this.createGround();
+            // Материалы
+            const woodMaterial = this.createWoodMaterial(frameMaterial, frameColoring);
+            const metalMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x555555,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+
+            // Создание элементов навеса с обработкой ошибок для каждого этапа
+            try {
+                console.log('1️⃣ Создаем столбы...');
+                await this.createPosts(length, width, height, woodMaterial, metalMaterial, postType, postMaterial);
+            } catch (error) {
+                console.error('❌ Ошибка создания столбов:', error);
+            }
+            
+            try {
+                console.log('2️⃣ Создаем продольные балки...');
+                this.createLongitudinalBeams(length, width, height, woodMaterial, frontBeamExtension, backBeamExtension, postMaterial, postType);
+            } catch (error) {
+                console.error('❌ Ошибка создания балок:', error);
+            }
+            
+            try {
+                console.log('3️⃣ Создаем раскосы (braceType:', braceType, ')...');
+                await this.createBeamBraces(length, width, height, woodMaterial, frontBeamExtension, backBeamExtension, postMaterial, braceType, postType);
+            } catch (error) {
+                console.error('❌ Ошибка создания раскосов:', error);
+            }
+            
+            try {
+                console.log('4️⃣ Создаем фермы (roofType:', roofType, ')...');
+                await this.createTrusses(length, width, height, roofHeight, woodMaterial, roofType, braceType, postMaterial, trussMaterial, postType);
+            } catch (error) {
+                console.error('❌ Ошибка создания ферм:', error);
+            }
+            
+            try {
+                console.log('5️⃣ Создаем кровлю (roofingMaterial:', roofingMaterial, ')...');
+                this.createRoofCovering(length, width, height, roofHeight, roofingMaterial, frontBeamExtension, backBeamExtension, roofType, roofColor, trussMaterial, postType);
+            } catch (error) {
+                console.error('❌ Ошибка создания кровли:', error);
+            }
+            
+            try {
+                console.log('6️⃣ Создаем землю...');
+                this.createGround();
+            } catch (error) {
+                console.error('❌ Ошибка создания земли:', error);
+            }
+            
+            console.log('✅ Модель создана. Элементов в canopyGroup:', this.canopyGroup.children.length);
+            
+        } catch (error) {
+            console.error('❌ КРИТИЧЕСКАЯ ошибка создания модели:', error);
+        }
     }
 
     // Показать индикатор загрузки
@@ -1987,6 +2092,8 @@ class Canopy3DRenderer {
 
     // Создание раскосов под балками
     async createBeamBraces(length, width, height, woodMaterial, frontExtension, backExtension, postMaterial, braceType, postType) {
+        console.log(`🔧 createBeamBraces START: braceType = ${braceType}`);
+        
         const beamLength = length + frontExtension + backExtension;
         const beamOffset = (frontExtension - backExtension) / 2;
         
@@ -1996,11 +2103,17 @@ class Canopy3DRenderer {
         const postSpacing = this.currentPostSpacing;
         const postsAlongLength = Math.ceil(length / postSpacing) + 1;
         
+        console.log(`   Количество позиций для раскосов: ${postsAlongLength}`);
+        
         // Получаем размеры сечения столба для правильного позиционирования раскосов
         const postDimensions = this.getPostDimensions(postMaterial);
         
         // Загружаем GLB модель раскоса
         const glbModel = await this.loadBraceGLB(braceType);
+        
+        console.log(`   GLB модель раскоса ${braceType}:`, glbModel ? '✅ ЗАГРУЖЕНА' : '⚠️ ОТСУТСТВУЕТ (используем простые балки)');
+        console.log(`   Тип glbModel:`, typeof glbModel);
+        console.log(`   glbModel?.children:`, glbModel?.children?.length || 'н/д');
         
         for (let i = 0; i < postsAlongLength; i++) {
             const z = -length/2 + (i * length / (postsAlongLength - 1));
@@ -2025,6 +2138,8 @@ class Canopy3DRenderer {
                 rightBrace.castShadow = true;
                 rightBrace.receiveShadow = true;
                 this.canopyGroup.add(rightBrace);
+                
+                console.log(`   ✅ Раскос ${braceType} (GLB) добавлен`);
             } else {
                 // Используем стандартные балки для раскосов
                 const beamDimensions = this.getBeamDimensions(postMaterial, postType);
@@ -2043,12 +2158,18 @@ class Canopy3DRenderer {
                 rightBrace.castShadow = true;
                 rightBrace.receiveShadow = true;
                 this.canopyGroup.add(rightBrace);
+                
+                console.log(`✅ Раскос ${braceType} создан как простая балка (var-1)`);
             }
         }
+        
+        console.log(`✅ createBeamBraces ЗАВЕРШЕНО: создано ${postsAlongLength * 2} раскосов (${postsAlongLength} позиций × 2 стороны)`);
     }
 
     // Функция создания ферм
     async createTrusses(length, width, height, roofHeight, woodMaterial, roofType, braceType, postMaterial, trussMaterial, postType) {
+        console.log(`🏗️ createTrusses START: roofType = ${roofType}`);
+        
         const beamDimensions = this.getBeamDimensions(postMaterial, postType);
         const trussDimensions = this.getTrussDimensions(trussMaterial);
         
@@ -2068,6 +2189,8 @@ class Canopy3DRenderer {
 
         const postSpacing = this.currentPostSpacing;
         const postsAlongLength = Math.ceil(length / postSpacing) + 1;
+        
+        console.log(`   Количество ферм: ${postsAlongLength}`);
         
         for (let i = 0; i < postsAlongLength; i++) {
             const z = -length/2 + (i * length / (postsAlongLength - 1));
@@ -2091,6 +2214,8 @@ class Canopy3DRenderer {
             trussGroup.position.set(0, 0, z);
             this.canopyGroup.add(trussGroup);
         }
+        
+        console.log(`✅ createTrusses ЗАВЕРШЕНО: создано ${postsAlongLength} ферм`);
     }
 
     // === УТИЛИТЫ ДЛЯ ФЕРМ ===
@@ -2924,6 +3049,71 @@ class Canopy3DRenderer {
         });
     }
 
+    // Получение материала кровли с кэшированием (новая система)
+    getRoofMaterialCached(roofingMaterial, roofColor) {
+        const key = `roof-${roofingMaterial}-${roofColor}`;
+        if (this.roofMaterialCache.has(key)) {
+            return this.roofMaterialCache.get(key);
+        }
+        
+        let material;
+        
+        // Определяем базовый тип материала
+        if (roofingMaterial === 'polycarbonate-8mm') {
+            // Поликарбонат - полупрозрачный
+            material = new THREE.MeshPhysicalMaterial({
+                color: 0x9ec9ff,
+                transparent: true,
+                opacity: 0.55,
+                roughness: 0.2,
+                metalness: 0.0,
+                transmission: 0.0,
+                side: THREE.DoubleSide
+            });
+        } else if (roofingMaterial === 'profiled-gl35r' || roofingMaterial === 'metal-grandline') {
+            // Профлист / металлочерепица - металлик
+            const metalColors = {
+                'amber': 0xD2691E,
+                'blue': 0x4169E1,
+                'green': 0x228B22,
+                'red': 0xDC143C,
+                'gray': 0x6b7685
+            };
+            material = new THREE.MeshStandardMaterial({
+                color: metalColors[roofColor] || 0x6b7685,
+                roughness: 0.35,
+                metalness: 0.6,
+                side: THREE.DoubleSide
+            });
+        } else if (roofingMaterial === 'shinglas-sonata') {
+            // Мягкая черепица - шероховатая
+            const shingleColors = {
+                'amber': 0x8B4513,
+                'blue': 0x2F4F4F,
+                'green': 0x2F4F2F,
+                'red': 0x8B0000,
+                'gray': 0x4a4a4a
+            };
+            material = new THREE.MeshStandardMaterial({
+                color: shingleColors[roofColor] || 0x4a4a4a,
+                roughness: 0.9,
+                metalness: 0.0,
+                side: THREE.DoubleSide
+            });
+        } else {
+            // Дефолтный материал
+            material = new THREE.MeshStandardMaterial({
+                color: 0x808080,
+                roughness: 0.5,
+                metalness: 0.2,
+                side: THREE.DoubleSide
+            });
+        }
+        
+        this.roofMaterialCache.set(key, material);
+        return material;
+    }
+
     // Создание материала кровли с реалистичными текстурами
     createRoofMaterial(roofingMaterial, roofColor) {
         const roofColors = {
@@ -3021,8 +3211,11 @@ class Canopy3DRenderer {
 
     // Создание кровельного покрытия
     createRoofCovering(length, width, height, roofHeight, roofingMaterial, frontExtension, backExtension, roofType, roofColor, trussMaterial, postType) {
+        console.log(`🏠 createRoofCovering START: roofingMaterial = ${roofingMaterial}, roofType = ${roofType}`);
+        
         // Если выбрано "Без кровли", не создаем крышу
         if (roofingMaterial === 'no-roofing') {
+            console.log('   Кровля отключена (no-roofing)');
             return;
         }
         
@@ -3053,14 +3246,27 @@ class Canopy3DRenderer {
         // Толщина кровельного материала в зависимости от типа
         const roofThickness = this.getRoofThickness(roofingMaterial);
         
+        // Свесы кровли по краям (100 мм с каждой стороны)
+        const roofOverhang = 0.1; // 100 мм
+        const roofWidthWithOverhang = B + roofOverhang * 2; // Добавляем свесы по ширине
+        const roofLengthWithOverhang = L + roofOverhang * 2; // Добавляем свесы по длине
+        
         if (roofType === 'var-1') {
-            // Создаем односкатную крышу
-            this.createSingleSlopeRoof(B, L, he, H, roofMaterial, roofThickness, roofLift);
-        } else if (roofType === 'var-2') {
-            // Создаем двускатную крышу с правильной толщиной
+            // Создаем односкатную крышу со свесами
+            this.createSingleSlopeRoof(roofWidthWithOverhang, roofLengthWithOverhang, he, H, roofMaterial, roofThickness, roofLift);
+        } else if (roofType === 'var-2' || roofType === 'var-3') {
+            // Создаем двускатную крышу с правильной толщиной для var-2 и var-3 со свесами
             // Передаем высоту карниза (верхняя поверхность нижнего пояса фермы)
-            this.createGabledRoof(B, L, he, H, p, roofMaterial, roofThickness, 0, roofLift);
+            this.createGabledRoof(roofWidthWithOverhang, roofLengthWithOverhang, he, H, p, roofMaterial, roofThickness, 0, roofLift);
+            
+            // Добавляем конёк для двускатной крыши (без изменения длины конька, он остаётся по длине навеса)
+            const ridgeHeightFull = he + H;
+            const ridgeElement = this.createRidgeProfile(roofingMaterial, roofColor, roofLengthWithOverhang, ridgeHeightFull);
+            this.canopyGroup.add(ridgeElement);
+            console.log('   Добавлен конёк для двускатной крыши');
         }
+        
+        console.log(`✅ createRoofCovering ЗАВЕРШЕНО`);
     }
 
     // Получение толщины кровельного материала
@@ -3077,6 +3283,76 @@ class Canopy3DRenderer {
             default:
                 return 0.001;   // 1мм по умолчанию
         }
+    }
+
+    // Создание конька для двускатной крыши
+    createRidgeProfile(roofingMaterial, roofColor, length, ridgeHeight) {
+        const ridgeGroup = new THREE.Group();
+        ridgeGroup.name = 'ridgeProfile';
+        
+        let ridgeWidth, ridgeThickness, ridgeMaterial;
+        
+        if (roofingMaterial === 'profiled-gl35r' || roofingMaterial === 'metal-grandline') {
+            // Профлист / металлочерепица - П-образный доборный элемент
+            ridgeWidth = 0.15; // 150 мм
+            ridgeThickness = 0.002;
+            
+            const metalColors = {
+                'amber': 0xD2691E,
+                'blue': 0x4169E1,
+                'green': 0x228B22,
+                'red': 0xDC143C,
+                'gray': 0x6b7685
+            };
+            ridgeMaterial = new THREE.MeshStandardMaterial({ 
+                color: metalColors[roofColor] || 0x6b7685, 
+                metalness: 0.7, 
+                roughness: 0.3 
+            });
+        } else if (roofingMaterial === 'shinglas-sonata') {
+            // Мягкая черепица - полоса из гонтов
+            ridgeWidth = 0.25; // 250 мм
+            ridgeThickness = 0.004;
+            
+            const shingleColors = {
+                'amber': 0x8B4513,
+                'blue': 0x2F4F4F,
+                'green': 0x2F4F2F,
+                'red': 0x8B0000,
+                'gray': 0x3f3f3f
+            };
+            ridgeMaterial = new THREE.MeshStandardMaterial({ 
+                color: shingleColors[roofColor] || 0x3f3f3f, 
+                roughness: 0.95 
+            });
+        } else if (roofingMaterial === 'polycarbonate-8mm') {
+            // Поликарбонат - узкая H-планка
+            ridgeWidth = 0.06; // 60 мм
+            ridgeThickness = 0.002;
+            ridgeMaterial = new THREE.MeshPhysicalMaterial({ 
+                color: 0x9ec9ff, 
+                transparent: true, 
+                opacity: 0.6 
+            });
+        } else {
+            // Дефолт
+            ridgeWidth = 0.15;
+            ridgeThickness = 0.002;
+            ridgeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+        }
+        
+        // Создаём коробку конька
+        const ridgeGeometry = new THREE.BoxGeometry(length, ridgeThickness, ridgeWidth);
+        const ridgeMesh = new THREE.Mesh(ridgeGeometry, ridgeMaterial);
+        
+        // Позиционируем конёк на высоте конька
+        ridgeMesh.position.y = ridgeHeight + ridgeThickness / 2 + 0.005; // Чуть выше скатов
+        ridgeMesh.position.z = 0; // По центру ширины
+        ridgeMesh.castShadow = true;
+        ridgeMesh.receiveShadow = true;
+        
+        ridgeGroup.add(ridgeMesh);
+        return ridgeGroup;
     }
 
     // Создание односкатной крыши с толщиной
@@ -3707,7 +3983,7 @@ class Canopy3DRenderer {
             'gray': 'Серый',
             'var-1': 'Односкатный',
             'var-2': 'Двускатный',
-            'var-3': 'Арочный'
+            'var-3': 'Двускатный со стойкой'
         };
         
         const postSectionNames = {
