@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест интеграции раскосов</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f0f;
+            color: white;
+            overflow: hidden;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #4fc3f7;
+            max-width: 400px;
+            z-index: 100;
+        }
+        h1 {
+            margin: 0 0 15px 0;
+            color: #4fc3f7;
+            font-size: 24px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4caf50;
+        }
+        .status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: #f44336;
+        }
+        .status.info {
+            background: rgba(33, 150, 243, 0.2);
+            border-color: #2196f3;
+        }
+        .controls {
+            margin: 15px 0;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #2196f3;
+        }
+        button.active {
+            background: #4caf50;
+        }
+        #console {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #666;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 3px 0;
+            padding: 2px 5px;
+        }
+        .log-success { color: #4caf50; }
+        .log-error { color: #f44336; }
+        .log-info { color: #2196f3; }
+        .log-warn { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h1>🧪 Тест интеграции раскосов</h1>
+        
+        <div id="status" class="status info">
+            Инициализация...
+        </div>
+        
+        <div class="controls">
+            <button onclick="testBrace(1)" id="btn1">Тест R1</button>
+            <button onclick="testBrace(2)" id="btn2">Тест R2</button>
+            <button onclick="testBrace(3)" id="btn3">Тест R3</button>
+            <button onclick="testBrace(4)" id="btn4">Тест R4</button>
+        </div>
+        
+        <div class="controls">
+            <button onclick="testAll()">Тест всех раскосов</button>
+            <button onclick="clearScene()">Очистить сцену</button>
+        </div>
+        
+        <div style="font-size: 12px; margin-top: 15px; opacity: 0.7;">
+            Управление: вращение мышью, zoom колёсиком
+        </div>
+    </div>
+    
+    <div id="console">
+        <strong>Консоль:</strong><br>
+    </div>
+
+    <!-- THREE.js (глобальная версия) -->
+    <script src="naves-calc/assets/libs/three/three.min.js"></script>
+    <script src="naves-calc/assets/libs/three/OrbitControls-wrapper.js"></script>
+    
+    <script>
+        // Проверка THREE.js
+        if (typeof THREE === 'undefined') {
+            document.getElementById('status').innerHTML = '❌ THREE.js не загружен!';
+            document.getElementById('status').className = 'status error';
+        } else {
+            log('✓ THREE.js загружен', 'success');
+        }
+    </script>
+    
+    <script type="module">
+        // Импорт модулей раскосов
+        import { createBraceR1 } from './naves-calc/assets/js/partGeometry_r1.js';
+        import { createBraceR2 } from './naves-calc/assets/js/partGeometry_r2.js';
+        import { createBraceR3 } from './naves-calc/assets/js/partGeometry_r3.js';
+        import { createBraceR4 } from './naves-calc/assets/js/partGeometry_r4.js';
+        
+        log('✓ Модули раскосов импортированы', 'success');
+        
+        // Создаём сцену
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0f0f0f);
+        
+        const camera = new THREE.PerspectiveCamera(
+            60,
+            window.innerWidth / window.innerHeight,
+            1,
+            10000
+        );
+        camera.position.set(500, 400, 600); // в мм
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+        
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.target.set(0, 200, 0); // в мм
+        
+        // Освещение
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(20, 30, 10);
+        directionalLight.castShadow = true;
+        scene.add(directionalLight);
+        
+        // Сетка (в мм)
+        const gridHelper = new THREE.GridHelper(2000, 40, 0x333333, 0x111111); // 2000мм = 2м
+        scene.add(gridHelper);
+        
+        log('✓ Сцена создана', 'success');
+        
+        // Хранилище раскосов
+        const braces = [];
+        
+        // Функции для тестирования
+        window.testBrace = function(type) {
+            log(`🚀 Тест раскоса R${type}...`, 'info');
+            
+            try {
+                const startTime = performance.now();
+                let mesh;
+                
+                switch(type) {
+                    case 1: mesh = createBraceR1(); break;
+                    case 2: mesh = createBraceR2(); break;
+                    case 3: mesh = createBraceR3(); break;
+                    case 4: mesh = createBraceR4(); break;
+                }
+                
+                const endTime = performance.now();
+                const time = (endTime - startTime).toFixed(2);
+                
+                // Конвертируем из дюймов в миллиметры
+                // 1 дюйм = 25.4 мм
+                const INCH_TO_MM = 25.4;
+                mesh.scale.setScalar(INCH_TO_MM);
+                
+                // Позиционируем (учитываем масштаб)
+                const offset = (type - 2.5) * 300; // в мм
+                mesh.position.set(offset, 0, 0);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                
+                scene.add(mesh);
+                braces.push(mesh);
+                
+                const vertices = mesh.geometry.attributes.position.count;
+                const triangles = mesh.geometry.index 
+                    ? Math.floor(mesh.geometry.index.count / 3) 
+                    : Math.floor(vertices / 3);
+                
+                log(`✅ R${type}: ${vertices} вершин, ${triangles} треуг., ${time}ms (размеры в мм)`, 'success');
+                
+                document.getElementById(`btn${type}`).classList.add('active');
+                updateStatus('success', `✅ R${type} создан за ${time}ms`);
+                
+            } catch (error) {
+                log(`❌ Ошибка R${type}: ${error.message}`, 'error');
+                updateStatus('error', `❌ Ошибка R${type}`);
+            }
+        };
+        
+        window.testAll = async function() {
+            log('🚀 Тест всех раскосов...', 'info');
+            clearScene();
+            
+            const startTime = performance.now();
+            
+            for (let i = 1; i <= 4; i++) {
+                await new Promise(resolve => {
+                    testBrace(i);
+                    setTimeout(resolve, 100);
+                });
+            }
+            
+            const endTime = performance.now();
+            const totalTime = (endTime - startTime).toFixed(2);
+            
+            log(`✅ Все 4 раскоса созданы за ${totalTime}ms`, 'success');
+            updateStatus('success', `✅ Все 4 раскоса за ${totalTime}ms`);
+        };
+        
+        window.clearScene = function() {
+            braces.forEach(mesh => scene.remove(mesh));
+            braces.length = 0;
+            
+            document.querySelectorAll('button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            log('🗑️ Сцена очищена', 'info');
+            updateStatus('info', 'Сцена очищена');
+        };
+        
+        // Анимация
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            braces.forEach(mesh => {
+                mesh.rotation.y += 0.003;
+            });
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        updateStatus('success', '✅ Готово! Нажмите кнопки для теста');
+        
+        // Автоматический тест при загрузке
+        setTimeout(() => {
+            log('🎬 Запуск автотеста...', 'info');
+            testAll();
+        }, 500);
+    </script>
+    
+    <script>
+        function log(message, type = 'info') {
+            const consoleEl = document.getElementById('console');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleEl.appendChild(entry);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus(type, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${type}`;
+            statusEl.innerHTML = message;
+        }
+    </script>
+</body>
+</html>
+
+

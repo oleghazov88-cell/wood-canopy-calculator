@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLB Geometry Extractor</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 {
+            color: #4ec9b0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #252526;
+            border-radius: 5px;
+            border: 1px solid #3e3e42;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        #output {
+            white-space: pre-wrap;
+            font-size: 12px;
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 3px;
+            border: 1px solid #3e3e42;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        #info {
+            background: #264f78;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #4ec9b0;
+        }
+        .error {
+            color: #f48771;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        #copyBtn {
+            background: #0e639c;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 GLB Geometry Extractor</h1>
+        <div class="section">
+            <h2>Выберите GLB файл</h2>
+            <input type="file" id="fileInput" accept=".glb,.gltf" />
+            <button onclick="processFile()">Извлечь геометрию</button>
+        </div>
+        
+        <div class="section" id="info"></div>
+        
+        <div class="section">
+            <h2>Сгенерированный код</h2>
+            <button id="copyBtn" onclick="copyCode()">📋 Копировать код</button>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./naves-calc/assets/libs/three/three.module.min.js"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from './naves-calc/assets/libs/three/GLTFLoader.js';
+
+        window.THREE = THREE;
+        window.loader = new GLTFLoader();
+        
+        window.processFile = function() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showInfo('Пожалуйста, выберите файл', 'error');
+                return;
+            }
+            
+            showInfo('Загрузка и анализ файла...', 'info');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                const blob = new Blob([arrayBuffer]);
+                const url = URL.createObjectURL(blob);
+                
+                window.loader.load(
+                    url,
+                    function(gltf) {
+                        analyzeAndGenerate(gltf, file.name);
+                        URL.revokeObjectURL(url);
+                    },
+                    function(progress) {
+                        console.log('Loading:', progress);
+                    },
+                    function(error) {
+                        showInfo('Ошибка загрузки: ' + error.message, 'error');
+                        console.error(error);
+                    }
+                );
+            };
+            
+            reader.readAsArrayBuffer(file);
+        };
+        
+        function analyzeAndGenerate(gltf, fileName) {
+            const scene = gltf.scene;
+            const info = [];
+            
+            info.push(`<div class="success">✓ Файл успешно загружен: ${fileName}</div>`);
+            
+            // Анализ структуры
+            let meshCount = 0;
+            let totalVertices = 0;
+            let totalTriangles = 0;
+            
+            scene.traverse((object) => {
+                if (object.isMesh) {
+                    meshCount++;
+                    const geo = object.geometry;
+                    const vertexCount = geo.attributes.position.count;
+                    const triangleCount = geo.index ? geo.index.count / 3 : vertexCount / 3;
+                    
+                    totalVertices += vertexCount;
+                    totalTriangles += triangleCount;
+                    
+                    info.push(`<br>Меш: ${object.name || 'unnamed'}`);
+                    info.push(`  - Вершины: ${vertexCount}`);
+                    info.push(`  - Треугольники: ${Math.floor(triangleCount)}`);
+                }
+            });
+            
+            info.push(`<br><strong>Всего мешей: ${meshCount}</strong>`);
+            info.push(`<strong>Всего вершин: ${totalVertices}</strong>`);
+            info.push(`<strong>Всего треугольников: ${Math.floor(totalTriangles)}</strong>`);
+            
+            document.getElementById('info').innerHTML = info.join('<br>');
+            
+            // Генерация кода
+            generateCode(gltf);
+        }
+        
+        function generateCode(gltf) {
+            const scene = gltf.scene;
+            let targetMesh = null;
+            let maxVertices = 0;
+            
+            // Находим самый большой меш
+            scene.traverse((object) => {
+                if (object.isMesh) {
+                    const vertexCount = object.geometry.attributes.position.count;
+                    if (vertexCount > maxVertices) {
+                        maxVertices = vertexCount;
+                        targetMesh = object;
+                    }
+                }
+            });
+            
+            if (!targetMesh) {
+                showInfo('Меш не найден в файле', 'error');
+                return;
+            }
+            
+            const geometry = targetMesh.geometry;
+            const material = targetMesh.material;
+            
+            let code = `// Auto-generated from GLB file\n`;
+            code += `// Mesh: ${targetMesh.name || 'unnamed'}\n`;
+            code += `// Vertices: ${geometry.attributes.position.count}\n`;
+            code += `// Triangles: ${geometry.index ? geometry.index.count / 3 : geometry.attributes.position.count / 3}\n\n`;
+            
+            code += `import * as THREE from 'three';\n\n`;
+            code += `export function createPartMesh() {\n`;
+            code += `    const geometry = new THREE.BufferGeometry();\n\n`;
+            
+            // Position attribute
+            const positions = geometry.attributes.position.array;
+            code += `    // Position attribute (${geometry.attributes.position.count} vertices)\n`;
+            code += `    const positions = new Float32Array([\n`;
+            
+            for (let i = 0; i < positions.length; i += 3) {
+                const x = positions[i].toFixed(6);
+                const y = positions[i + 1].toFixed(6);
+                const z = positions[i + 2].toFixed(6);
+                const comma = i + 3 < positions.length ? ',' : '';
+                code += `        ${x}, ${y}, ${z}${comma}\n`;
+            }
+            
+            code += `    ]);\n`;
+            code += `    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));\n\n`;
+            
+            // Normal attribute
+            if (geometry.attributes.normal) {
+                const normals = geometry.attributes.normal.array;
+                code += `    // Normal attribute\n`;
+                code += `    const normals = new Float32Array([\n`;
+                
+                for (let i = 0; i < normals.length; i += 3) {
+                    const x = normals[i].toFixed(6);
+                    const y = normals[i + 1].toFixed(6);
+                    const z = normals[i + 2].toFixed(6);
+                    const comma = i + 3 < normals.length ? ',' : '';
+                    code += `        ${x}, ${y}, ${z}${comma}\n`;
+                }
+                
+                code += `    ]);\n`;
+                code += `    geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));\n\n`;
+            }
+            
+            // UV attribute
+            if (geometry.attributes.uv) {
+                const uvs = geometry.attributes.uv.array;
+                code += `    // UV attribute\n`;
+                code += `    const uvs = new Float32Array([\n`;
+                
+                for (let i = 0; i < uvs.length; i += 2) {
+                    const u = uvs[i].toFixed(6);
+                    const v = uvs[i + 1].toFixed(6);
+                    const comma = i + 2 < uvs.length ? ',' : '';
+                    code += `        ${u}, ${v}${comma}\n`;
+                }
+                
+                code += `    ]);\n`;
+                code += `    geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));\n\n`;
+            }
+            
+            // Index attribute
+            if (geometry.index) {
+                const indices = geometry.index.array;
+                const indexType = indices.length > 65535 || Math.max(...indices) > 65535 ? 'Uint32Array' : 'Uint16Array';
+                
+                code += `    // Index attribute (${indices.length} indices, ${Math.floor(indices.length / 3)} triangles)\n`;
+                code += `    const indices = new ${indexType}([\n`;
+                
+                for (let i = 0; i < indices.length; i += 3) {
+                    const i0 = indices[i];
+                    const i1 = indices[i + 1];
+                    const i2 = indices[i + 2];
+                    const comma = i + 3 < indices.length ? ',' : '';
+                    code += `        ${i0}, ${i1}, ${i2}${comma}\n`;
+                }
+                
+                code += `    ]);\n`;
+                code += `    geometry.setIndex(new THREE.BufferAttribute(indices, 1));\n\n`;
+            }
+            
+            // Material
+            code += `    // Material\n`;
+            if (material) {
+                code += `    const material = new THREE.MeshStandardMaterial({\n`;
+                
+                if (material.color) {
+                    code += `        color: new THREE.Color(${material.color.r.toFixed(3)}, ${material.color.g.toFixed(3)}, ${material.color.b.toFixed(3)}),\n`;
+                }
+                
+                if (material.metalness !== undefined) {
+                    code += `        metalness: ${material.metalness.toFixed(3)},\n`;
+                }
+                
+                if (material.roughness !== undefined) {
+                    code += `        roughness: ${material.roughness.toFixed(3)},\n`;
+                }
+                
+                if (material.transparent) {
+                    code += `        transparent: true,\n`;
+                    code += `        opacity: ${material.opacity.toFixed(3)},\n`;
+                }
+                
+                if (material.side === THREE.DoubleSide) {
+                    code += `        side: THREE.DoubleSide,\n`;
+                }
+                
+                code += `    });\n\n`;
+            } else {
+                code += `    const material = new THREE.MeshStandardMaterial({\n`;
+                code += `        color: 0x8B4513,\n`;
+                code += `        roughness: 0.8,\n`;
+                code += `        metalness: 0.0,\n`;
+                code += `    });\n\n`;
+            }
+            
+            code += `    const mesh = new THREE.Mesh(geometry, material);\n\n`;
+            
+            // Transform
+            code += `    // Transform (from original mesh)\n`;
+            
+            if (targetMesh.position.x !== 0 || targetMesh.position.y !== 0 || targetMesh.position.z !== 0) {
+                code += `    mesh.position.set(${targetMesh.position.x}, ${targetMesh.position.y}, ${targetMesh.position.z});\n`;
+            }
+            
+            if (targetMesh.rotation.x !== 0 || targetMesh.rotation.y !== 0 || targetMesh.rotation.z !== 0) {
+                code += `    mesh.rotation.set(${targetMesh.rotation.x}, ${targetMesh.rotation.y}, ${targetMesh.rotation.z});\n`;
+            }
+            
+            if (targetMesh.scale.x !== 1 || targetMesh.scale.y !== 1 || targetMesh.scale.z !== 1) {
+                code += `    mesh.scale.set(${targetMesh.scale.x}, ${targetMesh.scale.y}, ${targetMesh.scale.z});\n`;
+            }
+            
+            code += `\n    return mesh;\n`;
+            code += `}\n\n`;
+            
+            code += `// Usage example:\n`;
+            code += `// import { createPartMesh } from './partGeometry.js';\n`;
+            code += `// \n`;
+            code += `// const mesh = createPartMesh();\n`;
+            code += `// scene.add(mesh);\n`;
+            
+            document.getElementById('output').textContent = code;
+            window.generatedCode = code;
+        }
+        
+        function showInfo(message, type) {
+            const info = document.getElementById('info');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            info.innerHTML = `<span class="${className}">${message}</span>`;
+        }
+        
+        window.copyCode = function() {
+            const code = window.generatedCode;
+            if (!code) {
+                alert('Нет кода для копирования. Сначала обработайте GLB файл.');
+                return;
+            }
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Скопировано!';
+                btn.style.background = '#0e8c39';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#0e639c';
+                }, 2000);
+            }).catch(err => {
+                alert('Ошибка копирования: ' + err);
+            });
+        };
+    </script>
+</body>
+</html>
+
+
+
+
+

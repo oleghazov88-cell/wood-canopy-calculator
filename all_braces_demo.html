@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Все 4 типа раскосов - Demo</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            max-width: 350px;
+            z-index: 100;
+            border: 1px solid #333;
+        }
+        #info h2 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            color: #4fc3f7;
+        }
+        .brace-info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border-left: 3px solid #4fc3f7;
+        }
+        .brace-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: #ffa726;
+        }
+        .brace-info p {
+            margin: 3px 0;
+            font-size: 12px;
+            color: #ddd;
+        }
+        .highlight {
+            color: #66bb6a;
+            font-weight: bold;
+        }
+        #stats {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            border: 1px solid #333;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            border: 1px solid #333;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin: 3px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2196f3;
+        }
+        button.active {
+            background: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h2>🔧 Все 4 типа раскосов</h2>
+        <div style="background: rgba(255, 193, 7, 0.1); padding: 8px; border-radius: 5px; border-left: 3px solid #ffc107; margin-bottom: 12px; font-size: 12px;">
+            📏 <strong>Размеры в миллиметрах (мм)</strong><br>
+            Конвертация: дюймы × 25.4 → мм
+        </div>
+        
+        <div class="brace-info">
+            <h3>R1 - Простой</h3>
+            <p><strong>100×500×500 мм</strong></p>
+            <p>Вершины: <span class="highlight">24</span> | Треуг: <span class="highlight">36</span></p>
+        </div>
+        <div class="brace-info">
+            <h3>R2 - Крестообразный</h3>
+            <p><strong>100×400×400 мм</strong></p>
+            <p>Вершины: <span class="highlight">162</span> | Треуг: <span class="highlight">100</span></p>
+        </div>
+        <div class="brace-info">
+            <h3>R3 - Двойной</h3>
+            <p><strong>100×400×400 мм</strong></p>
+            <p>Вершины: <span class="highlight">186</span> | Треуг: <span class="highlight">108</span></p>
+        </div>
+        <div class="brace-info">
+            <h3>R4 - Угловой</h3>
+            <p><strong>100×500×500 мм</strong></p>
+            <p>Вершины: <span class="highlight">471</span> | Треуг: <span class="highlight">252</span></p>
+        </div>
+    </div>
+
+    <div id="controls">
+        <h3 style="margin: 0 0 10px 0; color: #4fc3f7;">Управление</h3>
+        <button id="rotateBtn" class="active">Вращение: ВКЛ</button><br>
+        <button id="wireframeBtn">Каркас: ВЫКЛ</button><br>
+        <button id="resetBtn">Сбросить камеру</button>
+    </div>
+
+    <div id="stats">
+        <strong>Всего:</strong><br>
+        Вершины: <span class="highlight">843</span><br>
+        Треугольники: <span class="highlight">496</span><br>
+        Размер кода: <span class="highlight">~86KB</span><br>
+        <br>
+        <strong>Загрузка:</strong> <span class="highlight">мгновенная</span><br>
+        <strong>GLTFLoader:</strong> <span class="highlight">не требуется</span>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./naves-calc/assets/libs/three/three.module.min.js",
+            "three/addons/": "./naves-calc/assets/libs/three/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from './naves-calc/assets/libs/three/OrbitControls.js';
+        import { createBraceR1 } from './naves-calc/assets/js/partGeometry_r1.js';
+        import { createBraceR2 } from './naves-calc/assets/js/partGeometry_r2.js';
+        import { createBraceR3 } from './naves-calc/assets/js/partGeometry_r3.js';
+        import { createBraceR4 } from './naves-calc/assets/js/partGeometry_r4.js';
+
+        console.log('🚀 Loading all 4 brace types...');
+        const startTime = performance.now();
+
+        // Сцена
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a0a);
+        scene.fog = new THREE.Fog(0x0a0a0a, 30, 100);
+
+        // Камера
+        const camera = new THREE.PerspectiveCamera(
+            60,
+            window.innerWidth / window.innerHeight,
+            1,
+            50000
+        );
+        camera.position.set(0, 400, 1200); // в мм
+        camera.lookAt(0, 200, 0);
+
+        // Рендерер
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Контроллы
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(0, 200, 0); // в мм
+
+        // Освещение
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+
+        const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight1.position.set(20, 30, 10);
+        directionalLight1.castShadow = true;
+        scene.add(directionalLight1);
+
+        const directionalLight2 = new THREE.DirectionalLight(0x4fc3f7, 0.3);
+        directionalLight2.position.set(-20, 20, -10);
+        scene.add(directionalLight2);
+
+        // Вспомогательные элементы (в мм)
+        const gridHelper = new THREE.GridHelper(3000, 60, 0x222222, 0x111111); // 3000мм = 3м
+        scene.add(gridHelper);
+
+        // Создаём все 4 раскоса
+        const braces = [];
+        const spacing = 350; // Расстояние между раскосами в мм
+        
+        // Коэффициент конвертации дюймы → миллиметры
+        const INCH_TO_MM = 25.4;
+
+        // R1 - Простой
+        const braceR1 = createBraceR1();
+        braceR1.scale.setScalar(INCH_TO_MM); // Конвертация в мм
+        braceR1.position.set(-spacing * 1.5, 0, 0);
+        braceR1.castShadow = true;
+        braceR1.receiveShadow = true;
+        scene.add(braceR1);
+        braces.push({ mesh: braceR1, name: 'R1', speed: 0.003 });
+
+        // Подпись R1
+        const labelR1 = createLabel('R1', -spacing * 1.5, -50, 0);
+        scene.add(labelR1);
+
+        // R2 - Крестообразный
+        const braceR2 = createBraceR2();
+        braceR2.scale.setScalar(INCH_TO_MM); // Конвертация в мм
+        braceR2.position.set(-spacing * 0.5, 0, 0);
+        braceR2.castShadow = true;
+        braceR2.receiveShadow = true;
+        scene.add(braceR2);
+        braces.push({ mesh: braceR2, name: 'R2', speed: 0.004 });
+
+        // Подпись R2
+        const labelR2 = createLabel('R2', -spacing * 0.5, -50, 0);
+        scene.add(labelR2);
+
+        // R3 - Двойной
+        const braceR3 = createBraceR3();
+        braceR3.scale.setScalar(INCH_TO_MM); // Конвертация в мм
+        braceR3.position.set(spacing * 0.5, 0, 0);
+        braceR3.castShadow = true;
+        braceR3.receiveShadow = true;
+        scene.add(braceR3);
+        braces.push({ mesh: braceR3, name: 'R3', speed: 0.005 });
+
+        // Подпись R3
+        const labelR3 = createLabel('R3', spacing * 0.5, -50, 0);
+        scene.add(labelR3);
+
+        // R4 - Угловой
+        const braceR4 = createBraceR4();
+        braceR4.scale.setScalar(INCH_TO_MM); // Конвертация в мм
+        braceR4.position.set(spacing * 1.5, 0, 0);
+        braceR4.castShadow = true;
+        braceR4.receiveShadow = true;
+        scene.add(braceR4);
+        braces.push({ mesh: braceR4, name: 'R4', speed: 0.006 });
+
+        // Подпись R4
+        const labelR4 = createLabel('R4', spacing * 1.5, -50, 0);
+        scene.add(labelR4);
+
+        const loadTime = performance.now() - startTime;
+        console.log(`✅ All 4 braces loaded in ${loadTime.toFixed(2)}ms`);
+
+        // Функция создания подписи
+        function createLabel(text, x, y, z) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#4fc3f7';
+            ctx.font = 'bold 32px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 64, 32);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({ map: texture });
+            const sprite = new THREE.Sprite(material);
+            sprite.position.set(x, y, z);
+            sprite.scale.set(100, 50, 1); // в мм
+            return sprite;
+        }
+
+        // Пол для теней (в мм)
+        const planeGeometry = new THREE.PlaneGeometry(4000, 4000); // 4м × 4м
+        const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.4 });
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.y = -50;
+        plane.receiveShadow = true;
+        scene.add(plane);
+
+        // Управление
+        let rotating = true;
+        let wireframe = false;
+
+        document.getElementById('rotateBtn').addEventListener('click', function() {
+            rotating = !rotating;
+            this.textContent = `Вращение: ${rotating ? 'ВКЛ' : 'ВЫКЛ'}`;
+            this.classList.toggle('active');
+        });
+
+        document.getElementById('wireframeBtn').addEventListener('click', function() {
+            wireframe = !wireframe;
+            braces.forEach(b => {
+                b.mesh.material.wireframe = wireframe;
+            });
+            this.textContent = `Каркас: ${wireframe ? 'ВКЛ' : 'ВЫКЛ'}`;
+            this.classList.toggle('active');
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            camera.position.set(0, 15, 40);
+            controls.target.set(0, 8, 0);
+            controls.update();
+        });
+
+        // Обработка изменения размера окна
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Анимация
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (rotating) {
+                braces.forEach(b => {
+                    b.mesh.rotation.y += b.speed;
+                });
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Консольный вывод
+        console.log(`
+╔════════════════════════════════════════╗
+║   All 4 Brace Types - Loaded!         ║
+╠════════════════════════════════════════╣
+║ R1: 24 vertices, 36 triangles         ║
+║ R2: 162 vertices, 100 triangles       ║
+║ R3: 186 vertices, 108 triangles       ║
+║ R4: 471 vertices, 252 triangles       ║
+╠════════════════════════════════════════╣
+║ Total: 843 vertices, 496 triangles    ║
+║ Load time: ${loadTime.toFixed(2)}ms                       ║
+╚════════════════════════════════════════╝
+        `);
+    </script>
+</body>
+</html>
+
+
+
+

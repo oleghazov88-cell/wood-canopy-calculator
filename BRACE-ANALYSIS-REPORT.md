@@ -269,3 +269,4 @@ const braceGeometry = new THREE.BoxGeometry(
 **Версия кода:** Коммит `d3566bf`  
 **Статус:** ✅ Полный анализ завершен
 
+

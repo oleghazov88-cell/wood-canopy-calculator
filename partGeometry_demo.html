@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part Geometry Demo</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            max-width: 300px;
+            z-index: 100;
+        }
+        #info h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        #info p {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        .highlight {
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h2>🔧 Part Geometry Demo</h2>
+        <p><span class="highlight">Источник:</span> raskos/r2.glb</p>
+        <p><span class="highlight">Вершины:</span> 162</p>
+        <p><span class="highlight">Треугольники:</span> 100</p>
+        <p><span class="highlight">Размер:</span> ~16KB</p>
+        <p style="margin-top: 10px; font-size: 12px;">
+            ✓ Геометрия загружена из чистого JS кода<br>
+            ✓ Без использования GLTFLoader<br>
+            ✓ Мгновенная загрузка
+        </p>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./naves-calc/assets/libs/three/three.module.min.js",
+            "three/addons/": "./naves-calc/assets/libs/three/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from './naves-calc/assets/libs/three/OrbitControls.js';
+        import { createPartMesh } from './naves-calc/assets/js/partGeometry.js';
+
+        // Сцена
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+
+        // Камера
+        const camera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+        );
+        camera.position.set(15, 10, 15);
+        camera.lookAt(0, 8, 8);
+
+        // Рендерер
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Контроллы
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(0, 8, 8);
+
+        // Освещение
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(20, 30, 10);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.camera.left = -20;
+        directionalLight.shadow.camera.right = 20;
+        directionalLight.shadow.camera.top = 20;
+        directionalLight.shadow.camera.bottom = -20;
+        scene.add(directionalLight);
+
+        // Вспомогательные линии для ориентации
+        const gridHelper = new THREE.GridHelper(40, 40, 0x444444, 0x222222);
+        scene.add(gridHelper);
+
+        const axesHelper = new THREE.AxesHelper(10);
+        scene.add(axesHelper);
+
+        // Создаем меш из partGeometry.js
+        console.log('Creating mesh from partGeometry.js...');
+        const startTime = performance.now();
+        
+        const mesh = createPartMesh();
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        
+        const endTime = performance.now();
+        console.log(`✓ Mesh created in ${(endTime - startTime).toFixed(2)}ms`);
+        console.log('Mesh:', mesh);
+        console.log('Geometry:', mesh.geometry);
+        console.log('Material:', mesh.material);
+
+        // Позиционируем меш в центр
+        mesh.position.set(0, 0, 0);
+        scene.add(mesh);
+
+        // Добавляем wireframe copy для лучшей визуализации
+        const wireframeGeometry = mesh.geometry.clone();
+        const wireframeMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ff00,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.1
+        });
+        const wireframeMesh = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
+        wireframeMesh.position.copy(mesh.position);
+        scene.add(wireframeMesh);
+
+        // Добавляем пол для теней
+        const planeGeometry = new THREE.PlaneGeometry(50, 50);
+        const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.3 });
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.y = -1;
+        plane.receiveShadow = true;
+        scene.add(plane);
+
+        // Обработка изменения размера окна
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Анимация
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Медленное вращение меша
+            mesh.rotation.y += 0.005;
+            wireframeMesh.rotation.y += 0.005;
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Добавляем информацию в консоль
+        console.log(`
+╔════════════════════════════════════════╗
+║   Part Geometry Demo - Successfully    ║
+║              Loaded!                   ║
+╠════════════════════════════════════════╣
+║ Source: raskos/r2.glb                  ║
+║ Vertices: ${mesh.geometry.attributes.position.count.toString().padEnd(28)}║
+║ Triangles: ${(mesh.geometry.index.count / 3).toString().padEnd(27)}║
+║ Material: MeshStandardMaterial         ║
+╚════════════════════════════════════════╝
+        `);
+    </script>
+</body>
+</html>
+
+
+
+
+
