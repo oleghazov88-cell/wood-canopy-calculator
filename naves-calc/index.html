@@ -778,21 +778,13 @@
     <!-- Three.js Dependencies -->
     <script src="assets/libs/three/three.min.js"></script>
     <script src="assets/libs/three/OrbitControls-wrapper.js"></script>
-    <!-- GLTFLoader для загрузки 3D моделей раскосов -->
-    <script src="assets/libs/three/GLTFLoader.js"></script>
     
     <!-- Проверка загрузки THREE.js библиотек -->
     <script>
         console.log('🔍 Проверка загрузки THREE.js библиотек:');
         console.log('  THREE:', typeof THREE !== 'undefined' ? '✅' : '❌');
         console.log('  THREE.OrbitControls:', typeof THREE.OrbitControls !== 'undefined' ? '✅' : '❌');
-        console.log('  THREE.GLTFLoader:', typeof THREE.GLTFLoader !== 'undefined' ? '✅' : '❌');
-        
-        if (typeof THREE.GLTFLoader === 'undefined') {
-            console.error('❌ КРИТИЧНО: THREE.GLTFLoader не загружен! Проверьте файл GLTFLoader.js');
-        } else {
-            console.log('✅ Все библиотеки THREE.js загружены успешно');
-        }
+        console.log('✅ Все необходимые библиотеки THREE.js загружены успешно');
     </script>
     
     <!-- MVP Renderer & Presenter -->
@@ -801,6 +793,9 @@
     
     <!-- MVP App Initialization -->
     <script src="assets/js/mvp/app.js"></script>
+    
+    <!-- 🚀 Braces Code Loader - замена GLB на программные копии -->
+    <script type="module" src="assets/js/braces-code-loader.js"></script>
     
     <script>
         window.addEventListener('DOMContentLoaded', () => {
