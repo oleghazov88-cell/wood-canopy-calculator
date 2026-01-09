@@ -97,6 +97,12 @@ class CanopyRendererV3 {
             // Инициализируем Three.js сцену
             this.init3DScene();
 
+            // ✅ FIX: Добавляем слушатель изменения размера окна
+            window.addEventListener('resize', this.handleResizeDebounced.bind(this));
+
+            // Форсируем обновление размера для корректного DPI сразу после загрузки
+            setTimeout(() => this.handleResize(), 50);
+
             console.log('✅ 3D Renderer инициализирован');
 
         } catch (error) {
@@ -222,7 +228,10 @@ class CanopyRendererV3 {
         this.renderer.toneMappingExposure = 1.0;
 
         // --- COMPOSER (POST-PROCESSING) ---
-        if (window.THREE.EffectComposer && window.THREE.SAOPass) {
+        // Отключаем SAO на мобильных для четкости (Antialiasing) и производительности
+        const isMobile = window.innerWidth < 992;
+
+        if (!isMobile && window.THREE.EffectComposer && window.THREE.SAOPass) {
             this.composer = new THREE.EffectComposer(this.renderer);
             const renderPass = new THREE.RenderPass(this.scene, this.camera);
             renderPass.clear = true; // Важно, чтобы очищать буфер
@@ -443,6 +452,33 @@ class CanopyRendererV3 {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        // ✅ AUTO-RESIZE CHECK (Исправляет мыло и растянутость)
+        if (this.renderer && this.canvasElement && this.camera) {
+            const canvas = this.canvasElement;
+            const pixelRatio = Math.min(window.devicePixelRatio, 2.0); // Ограничим DPI для скорости
+
+            const width = Math.floor(canvas.clientWidth * pixelRatio);
+            const height = Math.floor(canvas.clientHeight * pixelRatio);
+
+            // Если размер буфера не совпадает с размером на экране (физические пиксели)
+            if (canvas.width !== width || canvas.height !== height) {
+                // Обновляем буфер рендера
+                this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+                this.renderer.setPixelRatio(pixelRatio);
+
+                // Обновляем камеру
+                this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                this.camera.updateProjectionMatrix();
+
+                if (this.hasComposer && this.composer) {
+                    this.composer.setSize(width, height);
+                }
+
+                this.needsRender = true;
+                // console.log('🔄 Auto-resized to:', width, height);
+            }
+        }
+
         const currentTime = performance.now();
         const deltaTime = currentTime - this.lastRenderTime;
 
@@ -522,9 +558,25 @@ class CanopyRendererV3 {
         if (!this.camera || !this.renderer || !this.canvasElement) return;
         const container = this.canvasElement.parentElement;
         if (!container) return;
-        this.camera.aspect = container.clientWidth / container.clientHeight;
+
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        // Избегаем нулевых размеров
+        if (width === 0 || height === 0) return;
+
+        this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(container.clientWidth, container.clientHeight);
+
+        this.renderer.setSize(width, height);
+
+        // ✅ High DPI Fix: Обновляем pixelRatio
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5)); // Ограничиваем до 2.5x для производительности
+
+        if (this.hasComposer && this.composer) {
+            this.composer.setSize(width, height);
+        }
+
         this.needsRender = true;
     }
 
