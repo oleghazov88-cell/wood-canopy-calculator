@@ -70,7 +70,7 @@ body {
 
 /* Обертка для всего контента */
 .naves-calc-wrapper {
-    max-width: 1400px;
+    width: 100%;
     margin: 0 auto;
     padding: var(--nc-gap-lg);
     box-sizing: border-box;
@@ -84,6 +84,7 @@ body {
     line-height: 1.6;
     font-size: var(--nc-text-base);
     display: flex;
+    flex-direction: row;
     background: var(--nc-bg-white);
     gap: var(--nc-gap-lg);
     box-sizing: border-box;
@@ -94,11 +95,12 @@ body {
     box-sizing: border-box;
 }
 
-/* Форма параметров */
+/* Форма параметров (слева) */
 #nc-form {
-    flex: 0 0 40%;
-    min-width: 450px;
-    max-width: 700px;
+    flex: 0 0 38%;
+    width: 38%;
+    min-width: 420px;
+    max-width: 650px;
     background: var(--nc-bg-white);
     border-radius: var(--nc-radius);
     padding: var(--nc-padding);
@@ -107,6 +109,8 @@ body {
     height: fit-content;
     transition: var(--nc-transition);
     backdrop-filter: blur(10px);
+    box-sizing: border-box;
+    order: 1;
 }
 
 #nc-form:hover {
@@ -114,7 +118,7 @@ body {
     transform: translateY(-2px);
 }
 
-/* Правая панель с 3D и сводкой */
+/* Правая панель с 3D и сводкой (справа) */
 .naves-calc__view {
     flex: 1;
     display: flex;
@@ -127,6 +131,8 @@ body {
     border: 1px solid var(--nc-border-light);
     transition: var(--nc-transition);
     backdrop-filter: blur(10px);
+    box-sizing: border-box;
+    order: 2;
 }
 
 .naves-calc__view:hover {
@@ -498,16 +504,29 @@ select.nc-field__input {
 }
 
 /* Адаптивность */
+@media (max-width: 1400px) {
+    .naves-calc-wrapper {
+        padding: var(--nc-gap-md);
+    }
+}
+
 @media (max-width: 1200px) {
     .naves-calc {
         flex-direction: column;
     }
     
-    #nc-form,
+    #nc-form {
+        flex: 1;
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
     .naves-calc__view {
         flex: 1;
         min-width: 100%;
-        max-width: none;
+        max-width: 100%;
+        width: 100%;
     }
     
     #nc-canvas {
@@ -520,19 +539,65 @@ select.nc-field__input {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .naves-calc-wrapper {
         padding: var(--nc-gap-md);
     }
     
     .naves-calc {
         gap: var(--nc-gap-md);
-        margin-bottom: 40px;
+        flex-direction: column;
+    }
+    
+    #nc-form {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        order: 1;
+    }
+    
+    .naves-calc__view {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        order: 2;
     }
     
     #nc-form,
     .naves-calc__view {
         padding: var(--nc-gap-md);
+    }
+}
+
+@media (max-width: 768px) {
+    .naves-calc-wrapper {
+        padding: var(--nc-gap-sm);
+    }
+    
+    .naves-calc {
+        gap: var(--nc-gap-md);
+        margin-bottom: 40px;
+        flex-direction: column;
+    }
+    
+    #nc-form {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        order: 1;
+    }
+    
+    .naves-calc__view {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        order: 2;
+    }
+    
+    #nc-form,
+    .naves-calc__view {
+        padding: var(--nc-gap-md);
+        border-radius: var(--nc-radius-md);
     }
     
     #nc-canvas {
@@ -570,20 +635,31 @@ select.nc-field__input {
     .specification {
         padding: 40px 20px;
     }
+    
+    /* Адаптация текста */
+    .nc-heading--lg {
+        font-size: var(--nc-text-2xl);
+    }
+    
+    .nc-field__label {
+        font-size: var(--nc-text-base);
+    }
 }
 
 @media (max-width: 576px) {
     .naves-calc-wrapper {
-        padding: var(--nc-gap-sm);
+        padding: var(--nc-gap-xs);
     }
     
     .naves-calc {
         margin-bottom: 30px;
+        gap: var(--nc-gap-sm);
     }
     
     #nc-form,
     .naves-calc__view {
         padding: var(--nc-gap-sm);
+        border-radius: var(--nc-radius-sm);
     }
     
     #nc-canvas {
@@ -1013,28 +1089,48 @@ select.nc-field__input {
 }
 
 /* Адаптивность для новых блоков */
+@media (max-width: 992px) {
+    .type-row-raido-col {
+        flex: 0 0 calc(16.666% - 12px);
+        min-width: 100px;
+    }
+}
+
 @media (max-width: 768px) {
     .type-row-raido-col {
         flex: 0 0 calc(25% - 12px);
+        min-width: 80px;
     }
     
     .field-col {
         min-width: 100%;
+        width: 100%;
     }
     
     .field-row {
         flex-direction: column;
+        gap: var(--nc-gap-sm);
     }
     
     .raido-image img {
         width: 50px;
         height: 50px;
     }
+    
+    /* Адаптация спецификации */
+    .specification {
+        padding: 30px 15px;
+    }
+    
+    .specification dl {
+        margin-bottom: 20px;
+    }
 }
 
 @media (max-width: 576px) {
     .type-row-raido-col {
         flex: 0 0 calc(33.333% - 10px);
+        min-width: 70px;
     }
     
     .raido-image img {
@@ -1044,9 +1140,54 @@ select.nc-field__input {
     
     .triger-open {
         padding: 15px 20px;
+        font-size: 18px;
     }
     
     .calculator-hide-info {
+        padding-top: 20px;
+    }
+    
+    .label_cl {
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+    
+    /* Адаптация слайдеров */
+    .slider-description {
+        font-size: 13px;
+    }
+    
+    .has-slider {
+        padding: 15px;
+    }
+    
+    .has-slider dt {
+        font-size: 14px;
+    }
+    
+    .has-slider dd {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 400px) {
+    .type-row-raido-col {
+        flex: 0 0 calc(50% - 8px);
+    }
+    
+    .triger-open {
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+    
+    .label_cl {
+        font-size: 14px;
+    }
+    
+    .specification {
+        padding: 20px 10px;
+    }
+}
         padding: 0 20px 20px;
     }
 }

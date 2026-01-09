@@ -105,8 +105,16 @@ class CanopyPresenter {
     onViewParamChanged(key, value) {
         console.log('📝 CanopyPresenter: параметр изменен:', key, '=', value);
         
+        // Маппинг имен параметров из View в Model
+        const paramMapping = {
+            'columnStep': 'postSpacing'  // Слайдер columnStep -> параметр postSpacing
+        };
+        
+        // Преобразуем ключ, если есть маппинг
+        const modelKey = paramMapping[key] || key;
+        
         // Обновляем модель
-        this.model.updateParam(key, value);
+        this.model.updateParam(modelKey, value);
         
         // Пересчитываем и обновляем
         this.calculateAndUpdate();
