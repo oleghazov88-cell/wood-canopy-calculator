@@ -433,8 +433,8 @@ class RoofSystem {
         // Standard UV mapping [0..1]
         const uvs = [
             0, 0,
-            1, 0,
             0, 1,
+            1, 0,
             1, 1
         ];
 
@@ -589,6 +589,7 @@ class RoofSystem {
     }
 
     buildTrims(width, length, baseHeight, roofHeight, roofType, color, materialType) {
+
         const mat = this.getStandardMaterial(color);
         mat.roughness = 0.6;
         mat.metalness = 0.2;

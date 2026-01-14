@@ -10,6 +10,8 @@ const fs = require('fs').promises;
 const path = require('path');
 const nodemailer = require('nodemailer');
 const TelegramBot = require('node-telegram-bot-api');
+const multer = require('multer');
+const XLSX = require('xlsx');
 
 // Загрузка конфигурации
 const config = require('./config.json');
@@ -29,6 +31,136 @@ app.use((req, res, next) => {
 });
 
 // ============================================================================
+// KONFIGURACIJA UPLOADA (Multer)
+// ============================================================================
+const UPLOAD_DIR = path.join(__dirname, '../upload/naves');
+
+// Ensure upload directory exists
+fs.mkdir(UPLOAD_DIR, { recursive: true }).catch(err => console.error(err));
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, UPLOAD_DIR);
+    },
+    filename: function (req, file, cb) {
+        // Save as prices.xlsx always? Or keep original name?
+        // Design says: prices.xlsx -> prices.json
+        // Let's save as prices_uploaded.xlsx temporary or overwrite prices.xlsx
+        cb(null, 'prices.xlsx');
+    }
+});
+
+const upload = multer({ storage: storage });
+
+// ============================================================================
+// API PRICES
+// ============================================================================
+
+/**
+ * GET /api/prices
+ * Віддає актуальні ціни (JSON)
+ */
+app.get('/api/prices', async (req, res) => {
+    try {
+        const jsonPath = path.join(UPLOAD_DIR, 'prices.json');
+
+        // Check if exists
+        try {
+            await fs.access(jsonPath);
+        } catch {
+            return res.status(404).json({ error: 'Prices not found' });
+        }
+
+        const content = await fs.readFile(jsonPath, 'utf8');
+        const data = JSON.parse(content);
+
+        // Wrap in standard response if needed, or return direct
+        // Frontend expects direct or wrapped. Let's return direct JSON from file
+        // plus maybe envelope if we want to follow "API Contract" from design
+        // Design says: { version: "1.1", data: { ... } }
+        // But CanopyModel supports direct object. Let's send what's in the file.
+        // Actually, let's stick to the file content as source of truth.
+        res.json(data);
+    } catch (error) {
+        console.error('Error serving prices:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * POST /api/prices/upload
+ * Приймає Excel, конвертує в JSON
+ */
+app.post('/api/prices/upload', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No file uploaded' });
+        }
+
+        const filePath = req.file.path;
+        console.log(`Processing uploaded file: ${filePath}`);
+
+        // Convert Excel to JSON
+        const workbook = XLSX.readFile(filePath);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        // Use raw: false to get formatted strings if needed, but we probably want numbers
+        // Let's use the logic from excel-to-json.js
+        const rawData = XLSX.utils.sheet_to_json(worksheet);
+
+        const pricingData = {
+            meta: {
+                version: "1.0.0", // TODO: Versioning logic
+                updatedAt: new Date().toISOString(),
+                currency: "RUB",
+                source: req.file.originalname
+            },
+            items: {}
+        };
+
+        let count = 0;
+        rawData.forEach(row => {
+            const key = row['key'] ? String(row['key']).trim() : null;
+            let price = row['price'];
+
+            if (key) {
+                // Normalize price
+                if (typeof price === 'string') {
+                    price = parseFloat(price.replace(/[^0-9.-]+/g, ""));
+                }
+
+                if (!isNaN(price) && price >= 0) {
+                    // Save rich object to support Admin Panel and full UI
+                    pricingData.items[key] = {
+                        price: price,
+                        name: row['name'] || key,
+                        unit: row['unit'] || '',
+                        category: row['category'] || ''
+                    };
+                    count++;
+                }
+            }
+        });
+
+        // Save JSON
+        const jsonPath = path.join(UPLOAD_DIR, 'prices.json');
+        await fs.writeFile(jsonPath, JSON.stringify(pricingData, null, 2));
+
+        res.json({
+            success: true,
+            message: 'Prices updated successfully',
+            itemsCount: count,
+            timestamp: pricingData.meta.updatedAt
+        });
+
+    } catch (error) {
+        console.error('Error processing price upload:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================================
 // МАРШРУТЫ
 // ============================================================================
 
@@ -38,7 +170,7 @@ app.use((req, res, next) => {
 app.post('/api/orders', async (req, res) => {
     try {
         const { customerData, calculationData } = req.body;
-        
+
         // Валидация
         if (!customerData || !customerData.name || !customerData.phone) {
             return res.status(400).json({
@@ -46,10 +178,10 @@ app.post('/api/orders', async (req, res) => {
                 error: 'Не заполнены обязательные поля: имя и телефон'
             });
         }
-        
+
         // Генерация ID заказа
         const orderId = generateOrderId();
-        
+
         // Создание объекта заказа
         const orderData = {
             orderId,
@@ -60,29 +192,29 @@ app.post('/api/orders', async (req, res) => {
             customerData,
             calculationData
         };
-        
+
         // Сохранение в файл
         await saveOrder(orderData);
-        
+
         // Добавление в лог
         await logOrder(orderData);
-        
+
         // Отправка уведомлений
         if (config.email && config.email.enabled) {
             await sendEmailNotification(orderData);
         }
-        
+
         if (config.telegram && config.telegram.enabled) {
             await sendTelegramNotification(orderData);
         }
-        
+
         // Успешный ответ
         res.json({
             success: true,
             orderId,
             message: 'Заказ успешно оформлен! Наш менеджер свяжется с вами в ближайшее время.'
         });
-        
+
     } catch (error) {
         console.error('Ошибка обработки заказа:', error);
         res.status(500).json({
@@ -99,7 +231,7 @@ app.get('/api/orders', async (req, res) => {
     try {
         const ordersDir = path.join(__dirname, 'orders');
         const files = await fs.readdir(ordersDir);
-        
+
         const orders = [];
         for (const file of files) {
             if (file.endsWith('.json')) {
@@ -107,16 +239,16 @@ app.get('/api/orders', async (req, res) => {
                 orders.push(JSON.parse(content));
             }
         }
-        
+
         // Сортировка по дате (новые первыми)
         orders.sort((a, b) => b.timestamp - a.timestamp);
-        
+
         res.json({
             success: true,
             count: orders.length,
             orders
         });
-        
+
     } catch (error) {
         console.error('Ошибка получения заказов:', error);
         res.status(500).json({
@@ -133,15 +265,15 @@ app.get('/api/orders/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const filePath = path.join(__dirname, 'orders', `${id}.json`);
-        
+
         const content = await fs.readFile(filePath, 'utf8');
         const order = JSON.parse(content);
-        
+
         res.json({
             success: true,
             order
         });
-        
+
     } catch (error) {
         if (error.code === 'ENOENT') {
             res.status(404).json({
@@ -177,7 +309,7 @@ function generateOrderId() {
     const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 9000) + 1000;
-    
+
     return `ORD-${dateStr}-${timestamp}-${random}`;
 }
 
@@ -186,14 +318,14 @@ function generateOrderId() {
  */
 async function saveOrder(orderData) {
     const ordersDir = path.join(__dirname, 'orders');
-    
+
     // Создание папки если не существует
     try {
         await fs.access(ordersDir);
     } catch {
         await fs.mkdir(ordersDir, { recursive: true });
     }
-    
+
     // Сохранение файла
     const filename = path.join(ordersDir, `${orderData.orderId}.json`);
     await fs.writeFile(filename, JSON.stringify(orderData, null, 2), 'utf8');
@@ -205,7 +337,7 @@ async function saveOrder(orderData) {
 async function logOrder(orderData) {
     const logFile = path.join(__dirname, 'orders', 'orders.log');
     const logEntry = `[${new Date().toISOString()}] ${orderData.orderId} | ${orderData.customerData.name} | ${orderData.customerData.phone} | ${orderData.calculationData.totalPrice}\n`;
-    
+
     await fs.appendFile(logFile, logEntry, 'utf8');
 }
 
@@ -223,16 +355,16 @@ async function sendEmailNotification(orderData) {
                 pass: config.email.smtp.pass
             }
         });
-        
+
         const html = formatEmailMessage(orderData);
-        
+
         await transporter.sendMail({
             from: config.email.from,
             to: config.email.to,
             subject: `Новый заказ навеса #${orderData.orderId}`,
             html
         });
-        
+
         console.log(`Email отправлен для заказа ${orderData.orderId}`);
     } catch (error) {
         console.error('Ошибка отправки email:', error);
@@ -244,7 +376,7 @@ async function sendEmailNotification(orderData) {
  */
 function formatEmailMessage(orderData) {
     const { customerData, calculationData } = orderData;
-    
+
     return `
     <html>
     <head>
@@ -307,7 +439,7 @@ async function sendTelegramNotification(orderData) {
     try {
         const bot = new TelegramBot(config.telegram.botToken, { polling: false });
         const { customerData, calculationData } = orderData;
-        
+
         let message = `🏗️ *Новый заказ навеса*\n\n`;
         message += `📋 Заказ: \`${orderData.orderId}\`\n`;
         message += `👤 Клиент: ${customerData.name}\n`;
@@ -320,9 +452,9 @@ async function sendTelegramNotification(orderData) {
         message += `• Площадь: ${calculationData.area} м²\n`;
         message += `• Тип: ${calculationData.roofType}\n`;
         message += `\n💰 *Стоимость:* ${calculationData.totalPrice}`;
-        
+
         await bot.sendMessage(config.telegram.chatId, message, { parse_mode: 'Markdown' });
-        
+
         console.log(`Telegram уведомление отправлено для заказа ${orderData.orderId}`);
     } catch (error) {
         console.error('Ошибка отправки Telegram уведомления:', error);

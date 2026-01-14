@@ -1,0 +1,47 @@
+# Backup files
+*.backup
+*.BACKUP
+*BACKUP*
+*backup*
+*DEPRECATED*
+*MONOLITH*
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+
+# Backup directories
+backups/
+backup/
+
+# Node
+node_modules/
+package-lock.json
+
+# App Data
+upload/
+orders/
+naves-calc/orders/
+naves-calc/upload/

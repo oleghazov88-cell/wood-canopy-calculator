@@ -33,11 +33,12 @@ class CanopyModel {
                 frameColoring: 'no-coloring'
             }
         };
-        
+
         this.params = { ...this.config.defaultParams };
-        this.prices = {};
+        this.prices = {}; // Internal normalized format: { key: { price: number, ... } }
+        this.rawPrices = null; // To store invalid/raw data for debugging
         this.currentPostSpacing = this.params.postSpacing / 10; // Конвертация в метры
-        
+
         // Колбэки для уведомления об изменениях
         this.onDataChanged = null;
         this.onPricesLoaded = null;
@@ -48,28 +49,78 @@ class CanopyModel {
      */
     async loadPrices() {
         try {
-            const response = await fetch(this.config.pricesUrl);
+            // Add timestamp to prevent caching
+            const url = `${this.config.pricesUrl}?t=${new Date().getTime()}`;
+            const response = await fetch(url);
+
             if (response.ok) {
-                this.prices = await response.json();
+                const data = await response.json();
+                this.processLoadedPrices(data);
             } else {
-                this.prices = this.getDefaultPrices();
+                console.warn(`Failed to load prices: ${response.status}. Using defaults.`);
+                this.useDefaultPrices();
             }
-            
-            if (this.onPricesLoaded) {
-                this.onPricesLoaded(this.prices);
-            }
-            
-            return this.prices;
         } catch (error) {
-            console.warn('Не удалось загрузить цены, используем дефолтные:', error);
-            this.prices = this.getDefaultPrices();
-            
-            if (this.onPricesLoaded) {
-                this.onPricesLoaded(this.prices);
-            }
-            
-            return this.prices;
+            console.warn('Network error loading prices, using defaults:', error);
+            this.useDefaultPrices();
         }
+
+        // Notify anyway (success or fallback)
+        if (this.onPricesLoaded) {
+            this.onPricesLoaded(this.prices);
+        }
+
+        return this.prices;
+    }
+
+    /**
+     * Process loaded prices and normalize them
+     * Supports both { items: { key: price } } and old { key: { price: 100 } } formats
+     */
+    processLoadedPrices(data) {
+        this.prices = {};
+
+        // Handle new format with metadata
+        const items = data.items || data;
+
+        for (const [key, value] of Object.entries(items)) {
+            if (typeof value === 'number') {
+                // New simplified format
+                this.prices[key] = { price: value };
+            } else if (typeof value === 'object' && value !== null && 'price' in value) {
+                // Old/Rich format
+                this.prices[key] = value;
+            } else {
+                console.warn(`Invalid price format for key: ${key}`, value);
+            }
+        }
+
+        console.log(`Prices loaded: ${Object.keys(this.prices).length} items`);
+    }
+
+    useDefaultPrices() {
+        this.prices = this.getDefaultPrices();
+    }
+
+    /**
+     * Safe price accessor
+     * @param {string} key 
+     * @returns {number} Price or 0 if not found
+     */
+    getPrice(key) {
+        if (this.prices && this.prices[key]) {
+            return Number(this.prices[key].price) || 0;
+        }
+
+        // Check defaults as last resort backup if not in loaded list
+        const defaults = this.getDefaultPrices();
+        if (defaults[key]) {
+            console.warn(`Price for '${key}' not found in loaded prices, using hardcoded default.`);
+            return defaults[key].price;
+        }
+
+        console.warn(`Price for '${key}' NOT FOUND. Returning 0.`);
+        return 0;
     }
 
     /**
@@ -104,12 +155,12 @@ class CanopyModel {
      */
     updateParam(key, value) {
         this.params[key] = value;
-        
+
         // Обновление currentPostSpacing при изменении postSpacing
         if (key === 'postSpacing') {
             this.currentPostSpacing = value / 10; // дециметры -> метры
         }
-        
+
         // Уведомляем подписчиков об изменении
         if (this.onDataChanged) {
             this.onDataChanged(key, value);
@@ -140,30 +191,46 @@ class CanopyModel {
         const postSpacing = this.currentPostSpacing;
         const mountingRequired = this.params.mountingRequired;
         const distanceFromMKAD = this.params.distanceFromMKAD;
-        
+
         const area = length * width;
         const postsAlongLength = Math.ceil(length / postSpacing) + 1;
         const postCount = postsAlongLength * 2;
         const trussCount = postsAlongLength; // Количество ферм равно количеству столбов вдоль длины
         const braceCount = postCount * 2;
-        
+
         // Стоимость материалов
         let materialsCost = 0;
-        materialsCost += area * (this.prices['roof_metal_grandline']?.price || 650);
-        materialsCost += postCount * height * (this.prices['post_glued_150x150']?.price || 1500);
-        materialsCost += trussCount * width * (this.prices['truss_planed_45x190']?.price || 850);
-        
+
+        // Кровля
+        // Construct key dynamically based on selection to match price keys
+        // Note: Make sure keys in frontend match keys in prices.json
+        // e.g. 'roof_' + 'metal-grandline' -> 'roof_metal_grandline'
+        // Assuming values in params use hyphens and prices use underscores or same
+        // Let's use the explicit mapping if needed, or rely on naming convention.
+        // Current default prices use underscores: roof_metal_grandline
+        // Params use hyphens: metal-grandline
+
+        const roofKey = 'roof_' + this.params.roofingMaterial.replace(/-/g, '_');
+        materialsCost += area * this.getPrice(roofKey);
+
+        const postKey = 'post_' + this.params.postMaterial.replace(/-/g, '_'); // e.g. post_glued_150x150
+        // Fallback or mapping if needed
+        materialsCost += postCount * height * this.getPrice(postKey);
+
+        const trussKey = 'truss_' + this.params.trussMaterial.replace(/-/g, '_');
+        materialsCost += trussCount * width * this.getPrice(trussKey);
+
         // Стоимость монтажа
         let mountingCost = 0;
         if (mountingRequired === 'yes') {
-            mountingCost = area * (this.prices['mounting_base']?.price || 2500);
+            mountingCost = area * this.getPrice('mounting_base');
         }
-        
+
         // Доставка
-        const deliveryCost = distanceFromMKAD * (this.prices['delivery_mkad']?.price || 35);
-        
+        const deliveryCost = distanceFromMKAD * this.getPrice('delivery_mkad');
+
         const totalCost = materialsCost + mountingCost + deliveryCost;
-        
+
         return {
             area,
             length,
@@ -192,14 +259,14 @@ class CanopyModel {
         const frontBeamExtension = this.params.frontBeamExtension;
         const backBeamExtension = this.params.backBeamExtension;
         const postSpacing = this.currentPostSpacing;
-        
+
         const area = length * width;
         const postsAlongLength = Math.ceil(length / postSpacing) + 1;
         const postCount = postsAlongLength * 2;
         const trussCount = postsAlongLength;
         const braceCount = postCount * 2;
         const trussSpacing = trussCount > 1 ? (length * 1000) / (trussCount - 1) : 0;
-        
+
         return {
             roofType: this.params.roofType,
             frameMaterial: this.params.frameMaterial,
@@ -239,7 +306,7 @@ class CanopyModel {
             'planed-140x140': { width: 0.14, height: 0.14 },
             'planed-190x190': { width: 0.19, height: 0.19 }
         };
-        
+
         return beamSizes[postMaterial] || { width: 0.15, height: 0.15 };
     }
 
@@ -252,7 +319,7 @@ class CanopyModel {
             'planed-35x190': { width: 0.035, height: 0.19 },
             'planed-50x150': { width: 0.05, height: 0.15 }
         };
-        
+
         return trussSizes[trussMaterial] || { width: 0.045, height: 0.19 };
     }
 
@@ -269,7 +336,7 @@ class CanopyModel {
             'planed-140x140': { width: 0.14, depth: 0.14 },
             'planed-190x190': { width: 0.19, depth: 0.19 }
         };
-        
+
         return postSizes[postMaterial] || { width: 0.15, depth: 0.15 };
     }
 
@@ -279,7 +346,7 @@ class CanopyModel {
     resetToDefaults() {
         this.params = { ...this.config.defaultParams };
         this.currentPostSpacing = this.params.postSpacing / 10;
-        
+
         if (this.onDataChanged) {
             this.onDataChanged('reset', this.params);
         }
@@ -304,7 +371,7 @@ class CanopyModel {
         if (data.params) {
             this.params = { ...this.config.defaultParams, ...data.params };
             this.currentPostSpacing = this.params.postSpacing / 10;
-            
+
             if (this.onDataChanged) {
                 this.onDataChanged('import', this.params);
             }
