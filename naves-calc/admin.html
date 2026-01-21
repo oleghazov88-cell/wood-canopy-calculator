@@ -56,8 +56,12 @@
             display: flex;
             flex-direction: column;
             padding: 24px;
-            z-index: 100;
+            z-index: 50;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
         }
 
         .brand {
@@ -113,12 +117,33 @@
             text-align: center;
         }
 
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
         /* Main Content */
         .main-content {
             flex: 1;
             margin-left: var(--sidebar-width);
             padding: 32px;
             max-width: 1600px;
+            transition: margin-left 0.3s;
+            width: 100%;
         }
 
         .page-header {
@@ -126,6 +151,27 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 32px;
+            gap: 16px;
+        }
+
+        .page-title-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-btn {
+            display: none;
+            background: white;
+            border: 1px solid #e5e7eb;
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
         }
 
         .page-title h1 {
@@ -253,7 +299,7 @@
         .search-box {
             position: relative;
             flex: 1;
-            min-width: 300px;
+            min-width: 250px;
         }
 
         .search-box input {
@@ -267,7 +313,7 @@
 
         .search-box input:focus {
             border-color: var(--primary);
-            ring: 2px solid var(--primary);
+            box-shadow: 0 0 0 2px var(--primary);
         }
 
         .search-box i {
@@ -290,7 +336,7 @@
         /* Products Grid */
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
         }
 
@@ -461,12 +507,14 @@
             color: var(--text-secondary);
             font-weight: 600;
             border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
         }
 
         tbody td {
             padding: 16px;
             border-bottom: 1px solid #f3f4f6;
             color: var(--text-main);
+            white-space: nowrap;
         }
 
         tbody tr:hover {
@@ -510,13 +558,14 @@
             width: 100%;
             max-width: 500px;
             box-shadow: var(--shadow-lg);
+            margin: 16px;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
-                width: 100%;
+                box-shadow: var(--shadow-lg);
             }
 
             .sidebar.active {
@@ -525,17 +574,62 @@
 
             .main-content {
                 margin-left: 0;
-                padding: 16px;
+                padding: 20px;
             }
 
-            .mobile-menu-btn {
-                display: block;
+            .menu-btn {
+                display: flex;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 16px;
+            }
+
+            .page-title-group {
+                width: 100%;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .toolbar {
+                flex-direction: column;
+            }
+
+            .filter-select {
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 
 <body>
+
+    <!-- Overlay -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
@@ -564,11 +658,16 @@
     <!-- Main Content -->
     <main class="main-content">
 
-        <!-- Mobile Header -->
+        <!-- Header -->
         <div class="page-header">
-            <div class="page-title">
-                <h1 id="pageTitle">Обзор</h1>
-                <p id="pageSubtitle">Статистика и метрики</p>
+            <div class="page-title-group">
+                <button class="menu-btn" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="page-title">
+                    <h1 id="pageTitle">Обзор</h1>
+                    <p id="pageSubtitle">Статистика и метрики</p>
+                </div>
             </div>
             <div class="header-actions">
                 <button class="btn btn-secondary" onclick="loadData()">
@@ -619,6 +718,9 @@
                     <button class="btn btn-secondary" onclick="exportJSON()">
                         <i class="fa-solid fa-download"></i> Скачать JSON
                     </button>
+                    <button class="btn btn-success" onclick="saveChanges()">
+                        <i class="fa-solid fa-save"></i> Сохранить на сервере
+                    </button>
                 </div>
             </div>
         </div>
@@ -657,6 +759,7 @@
                             <th>Телефон</th>
                             <th>Сумма</th>
                             <th>Статус</th>
+                            <th>КП</th>
                         </tr>
                     </thead>
                     <tbody id="ordersBody">
@@ -727,6 +830,14 @@
             loadData();
         });
 
+        // Toggle Sidebar for Mobile/Tablet
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
         // Navigation
         function showSection(sectionId) {
             // Hide all
@@ -747,6 +858,11 @@
             document.getElementById('pageSubtitle').textContent = titles[sectionId][1];
 
             currentSection = sectionId;
+
+            // Close sidebar on mobile after selection
+            if (window.innerWidth <= 1024) {
+                toggleSidebar();
+            }
         }
 
         // Data Loading
@@ -897,6 +1013,11 @@
                     <td>${order.customerData?.phone}</td>
                     <td style="font-weight:600; color:var(--primary)">${price}</td>
                     <td><span class="status-badge status-new">Новый</span></td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="window.open('/api/orders/${order.orderId}/cp', '_blank')" title="Скачать КП">
+                           <i class="fa-solid fa-file-excel"></i>
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -926,6 +1047,46 @@
                 showNotification(e.message, 'error');
             }
             event.target.value = '';
+        }
+
+        async function saveChanges() {
+            if (!confirm('Вы уверены, что хотите сохранить текущие цены на сервер? Это действие перезапишет файл prices.json.')) return;
+
+            try {
+                showNotification('Сохранение...', 'info');
+
+                // Prepare data: if prices is just the items map, wrap it if previously wrapped?
+                // The loadData function sets 'prices' = data.items || data.
+                // Best strictly save what we have. If backend expects structure with meta, we might lose meta if we just save 'prices'.
+                // Ideally, we should keep the original structure.
+                // For now, saving 'prices' as the root object or under 'items' depending on what 'prices' variable holds.
+                // Assuming 'prices' is the flat map of items due to loadData logic `prices = data.items ? data.items : data;`
+
+                // Let's reconstruct a proper object if needed.
+                const payload = {
+                    meta: {
+                        updatedAt: new Date().toISOString(),
+                        source: 'admin_panel'
+                    },
+                    items: prices
+                };
+
+                const res = await fetch('/api/prices/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    showNotification('Успешно сохранено!', 'success');
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (e) {
+                showNotification(e.message, 'error');
+            }
         }
 
         function exportJSON() {

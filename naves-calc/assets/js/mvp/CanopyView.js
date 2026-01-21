@@ -511,6 +511,9 @@ class CanopyView {
      * Рендеринг сводки с ценой
      */
     renderSummary(data) {
+        // Update external total price element if it exists
+        this.setTextContent('totalPrice', this.formatMoney(data.totalCost));
+
         const summaryHTML = `
     < div class="nc-summary" >
                 <div class="nc-summary__price">${this.formatMoney(data.totalCost)}</div>

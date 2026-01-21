@@ -160,6 +160,41 @@ app.post('/api/prices/upload', upload.single('file'), async (req, res) => {
     }
 });
 
+/**
+ * POST /api/prices/save
+ * Сохранение ручных изменений цен из админки
+ */
+app.post('/api/prices/save', async (req, res) => {
+    try {
+        const pricingData = req.body;
+
+        // Basic validation
+        if (!pricingData || typeof pricingData !== 'object') {
+            return res.status(400).json({ success: false, error: 'Invalid data format' });
+        }
+
+        // Save JSON
+        const jsonPath = path.join(UPLOAD_DIR, 'prices.json');
+
+        // Ensure meta is preserved or updated if passed, otherwise keep existing structure
+        // The frontend sends the full 'prices' object which is usually { items: ... } or just items map.
+        // Let's standardise: if it has 'items', save as is. If it's a map, wrap or save as is?
+        // Admin panel treats 'prices' as a map of items or logic handles 'items' key.
+        // Let's save exactly what receives to be consistent with frontend logic.
+
+        await fs.writeFile(jsonPath, JSON.stringify(pricingData, null, 2));
+
+        res.json({
+            success: true,
+            message: 'Prices saved successfully'
+        });
+
+    } catch (error) {
+        console.error('Error saving prices:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ============================================================================
 // МАРШРУТЫ
 // ============================================================================

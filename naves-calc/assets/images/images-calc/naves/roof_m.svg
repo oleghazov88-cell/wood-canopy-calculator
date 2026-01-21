@@ -1,0 +1,9 @@
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Main Triangle -->
+    <path d="M30 8L6 32H54L30 8Z" fill="#5A6474"/>
+    <!-- Truss Lines (White cutout effect or stroke) -->
+    <!-- Pattern: Vertical center, diagonals from side-mid to center-top? Similar to M shape -->
+    <!-- Backup path for M: M7 12L12 6 M17 12L12 6 (from bottom-ish to high-center) -->
+    <path d="M30 10V32" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <path d="M18 32L30 16L42 32" stroke="white" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -5,786 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Калькулятор навесов</title>
-    <link rel="stylesheet" href="./assets/css/naves-calc.css?v=2">
+
+    <!-- New CSS -->
+    <link rel="stylesheet" href="./assets/css/fonts/stylesheet.css">
+    <link rel="stylesheet" href="./assets/js/jquery-ui-1.14.1/jquery-ui.min.css">
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="stylesheet" href="./assets/css/responsive.css">
+    <!-- Original CSS (Optional, keeping for specific 3D styles if needed, but overriding mainly) -->
+    <!-- <link rel="stylesheet" href="./assets/css/naves-calc.css?v=2"> -->
+
     <style>
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* === NATURAL MINIMALISM THEME === */
-        :root {
-            /* Palette */
-            --nc-color-brand: #20B5B9;
-            /* Forest Teal */
-            --nc-color-cta: #FFB74D;
-            /* Amber Oak */
-            --nc-color-price: #2D3748;
-            /* Deep Slate */
-            --nc-color-text: #4A5568;
-            /* Charcoal */
-            --nc-color-text-light: #718096;
-            /* Cool Gray */
-
-            /* Backgrounds */
-            --nc-bg-page: #F7FAFC;
-            /* Soft Cloud */
-            --nc-bg-card: #FFFFFF;
-            /* Pure White */
-            --nc-bg-input: #EDF2F7;
-
-            /* Style Tokens */
-            --nc-radius: 12px;
-            --nc-shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            --nc-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --nc-border: 1px solid #E2E8F0;
-        }
-
-        /* Global Overrides */
-        body {
-            background-color: var(--nc-bg-page);
-            color: var(--nc-color-text);
-        }
-
-        /* Modernized Card Style */
-        .calculator-right-img-block,
-        .naves-calc__form,
-        .nc-summary {
-            background: var(--nc-bg-card) !important;
-            border-radius: var(--nc-radius) !important;
-            box-shadow: var(--nc-shadow-soft) !important;
-            border: var(--nc-border) !important;
-        }
-
-        /* Buttons Update */
-        .btn,
-        .nc-btn,
-        .button-red {
-            border-radius: var(--nc-radius) !important;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        }
-
-        .btn:hover,
-        .nc-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: var(--nc-shadow-hover);
-        }
-
-        /* Secondary Button (Action) */
-        .bg-red,
-        .btn-primary,
-        .button-red {
-            background: var(--nc-color-cta) !important;
-            color: #2D3748 !important;
-            /* Dark text on amber for contrast */
-            font-weight: 700 !important;
-        }
-
-        /* Price Tag Update */
-        .price,
-        .nc-summary__price {
-            color: var(--nc-color-price) !important;
-            font-family: inherit;
-            /* Use clean font */
-            font-weight: 700 !important;
-        }
-
-        /* Inputs & Sliders */
-        .nc-field__input,
-        select.select {
-            background-color: var(--nc-bg-input) !important;
-            border: 1px solid transparent !important;
-            border-radius: 8px !important;
-            color: var(--nc-color-text) !important;
-        }
-
-        .nc-field__input:focus,
-        select.select:focus {
-            background-color: #FFF !important;
-            border-color: var(--nc-color-brand) !important;
-            box-shadow: 0 0 0 3px rgba(32, 181, 185, 0.15) !important;
-        }
-
-
-        /* Оптимизация для 3D окна */
-        #nc-canvas {
-            will-change: transform;
-            transform: translateZ(0);
-        }
-
-        .naves-calc__view {
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Полноэкранное 3D окно */
-        .images-block.fullscreen-mode {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            min-height: 100vh !important;
-            а как z-index: 1000;
-            border-radius: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        .images-block.fullscreen-mode #nc-canvas,
-        body.fullscreen-3d #nc-canvas {
-            width: 100vw !important;
-            height: 100vh !important;
-            min-height: 100vh !important;
-            max-width: 100vw !important;
-            max-height: 100vh !important;
-            border-radius: 0 !important;
-            margin: 0 !important;
-            display: block !important;
-        }
-
-        .calculator-right-img-block.fullscreen-mode {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border-radius: 0 !important;
-            z-index: 999;
-        }
-
-        body.fullscreen-3d .path-top {
-            position: fixed !important;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-        }
-
-        body.fullscreen-3d .images-button {
-            position: fixed !important;
-            top: 20px;
-            right: 20px;
-            z-index: 1001;
-        }
-
-        body.fullscreen-3d .camera-controls {
-            position: fixed !important;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1001;
-        }
-
-        body.fullscreen-3d .path-bottom {
-            position: fixed !important;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1001;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 10px 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-        }
-
-        /* Скрываем форму слева в полноэкранном режиме */
-        body.fullscreen-3d #nc-form {
-            display: none !important;
-        }
-
-        body.fullscreen-3d section#nc-form {
-            display: none !important;
-        }
-
-        body.fullscreen-3d .naves-calc>section:first-child {
-            display: none !important;
-        }
-
-        /* Скрываем спецификацию в полноэкранном режиме */
-        body.fullscreen-3d #nc-summary {
-            display: none !important;
-        }
-
-        /* Скрываем обертку формы */
-        body.fullscreen-3d .naves-calc>section:first-child {
-            display: none !important;
-            width: 0 !important;
-            min-width: 0 !important;
-            max-width: 0 !important;
-            flex: 0 0 0 !important;
-        }
-
-        /* Убираем обертку в полноэкранном режиме */
-        body.fullscreen-3d .naves-calc-wrapper {
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-        }
-
-        body.fullscreen-3d .naves-calc {
-            margin: 0 !important;
-            gap: 0 !important;
-        }
-
-        body.fullscreen-3d .naves-calc__view {
-            flex: 1 1 100% !important;
-            width: 100vw !important;
-            max-width: 100vw !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            height: 100vh !important;
-            z-index: 998 !important;
-        }
-
-        body.fullscreen-3d .calculator-right-img-block.fullscreen-mode {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border-radius: 0 !important;
-            z-index: 999 !important;
-            background: #f9f9f9 !important;
-        }
-
-        body.fullscreen-3d .images-block.fullscreen-mode {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            min-height: 100vh !important;
-            z-index: 1000 !important;
-            border-radius: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: transparent !important;
-        }
-
-        /* ✅ УДАЛЕНО: CSS стили для отладки (175 строк) */
-
-        /* Стили для правого блока с 3D по аналогии с test.html */
-        .calculator-right-img-block {
-            background: white;
-            border-radius: 25px;
-            padding: 40px;
-            width: 100%;
-            box-sizing: border-box;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
-            border: 1px solid #e9ecef;
-            margin-bottom: 30px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
-        .path-top {
-            margin-bottom: 30px;
-        }
-
-        .path-top-info {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 25px;
-        }
-
-        .price {
-            font-family: var(--nc-font-heading);
-            font-size: 30px;
-            font-weight: 600;
-            color: #EB1B24;
-        }
-
-        .link-360 {
-            color: #666;
-            text-decoration: none;
-            font-size: 15px;
-        }
-
-        .button-row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 15px 20px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex: 1;
-        }
-
-        .btn-63 {
-            height: 63px;
-        }
-
-        .bg-red {
-            background: linear-gradient(90deg, #EB1B24 0%, #FF5058 100%);
-            color: white;
-        }
-
-        .bg-pink {
-            background: linear-gradient(90deg, #FF6B9D 0%, #FF8E9B 100%);
-            color: white;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .images-block {
-            flex: 1;
-            min-height: 400px;
-            position: relative;
-            border-radius: 10px;
-            overflow: hidden;
-            background: #f8f9fa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .images-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 10;
-        }
-
-        .save-btn {
-            background: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .save-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .path-bottom {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 18px;
-            font-weight: 500;
-            margin-top: 20px;
-        }
-
-        .scroll-link {
-            color: #EB1B24;
-            text-decoration: none;
-            line-height: 1.1;
-        }
-
-        .scroll-link:hover {
-            text-decoration: underline;
-        }
-
-        /* Стили для подписей слайдеров */
-        .slider-description {
-            margin-bottom: 10px;
-        }
-
-        .description-text {
-            font-size: 14px;
-            color: #666;
-            font-style: italic;
-            line-height: 1.4;
-        }
-
-        .naves-calc__view canvas {
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Кнопки управления камерой */
-        .camera-controls {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 100;
-        }
-
-        .camera-btn {
-            width: 40px;
-            height: 40px;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .camera-btn:hover {
-            background: rgba(32, 181, 185, 0.9);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(32, 181, 185, 0.3);
-        }
-
-        .camera-btn:active {
-            transform: translateY(0);
-        }
-
-        /* Адаптивность для кнопок камеры */
-        @media (max-width: 992px) {
-            .calculator-right-img-block {
-                padding: 30px;
-                border-radius: 20px;
-            }
-
-            .path-top-info {
-                flex-wrap: wrap;
-                gap: 15px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .camera-controls {
-                top: 10px;
-                right: 10px;
-                gap: 6px;
-            }
-
-            .camera-btn {
-                width: 35px;
-                height: 35px;
-                font-size: 14px;
-            }
-
-            .calculator-right-img-block {
-                padding: 20px;
-                border-radius: 15px;
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            .path-top {
-                margin-bottom: 20px;
-            }
-
-            .path-top-info {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-
-            .price {
-                font-size: 24px;
-            }
-
-            .button-row {
-                flex-direction: column;
-                gap: 10px;
-                width: 100%;
-            }
-
-            .btn-63 {
-                height: 50px;
-                width: 100%;
-            }
-
-            .images-block {
-                min-height: 300px;
-                width: 100%;
-            }
-
-            .path-bottom {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-
-            .hide_992 {
-                display: none !important;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .calculator-right-img-block {
-                padding: 15px;
-                border-radius: 10px;
-            }
-
-            .path-top {
-                margin-bottom: 15px;
-            }
-
-            .price {
-                font-size: 20px;
-            }
-
-            .btn {
-                font-size: 14px;
-                padding: 12px 16px;
-            }
-
-            .images-block {
-                min-height: 250px;
-            }
-
-            .images-button {
-                top: 10px;
-                right: 10px;
-            }
-
-            .save-btn {
-                width: 35px;
-                height: 35px;
-            }
-
-            .path-top-info {
-                font-size: 14px;
-            }
-
-            .link-360 {
-                font-size: 13px;
-            }
-        }
-
-        @media (max-width: 400px) {
-            .calculator-right-img-block {
-                padding: 10px;
-            }
-
-            .price {
-                font-size: 18px;
-            }
-
-            .images-block {
-                min-height: 200px;
-            }
-        }
-
-
-        /* Стили для сетки выбора столбов */
-
-
-
-        .nc-post-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .nc-post-grid.sidebar-mode {
-            grid-template-columns: 1fr 1fr;
-            /* 2 колонки в боковой панели */
-            gap: 10px;
-        }
-
-        .sidebar-mode .nc-post-card {
-            padding: 10px;
-        }
-
-        .sidebar-mode .nc-post-image {
-            height: 60px;
-            /* Уменьшенная картинка */
-            margin-bottom: 8px;
-        }
-
-        .sidebar-mode .nc-post-title {
-            font-size: 13px;
-        }
-
-        .sidebar-mode .nc-post-desc {
-            display: block;
-            /* Вернем описание */
-            font-size: 9px;
-            line-height: 1.1;
-        }
-
-        .nc-post-card {
-            position: relative;
-            background: #fff;
-            border: 2px solid #E2E8F0;
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            height: 100%;
-        }
-
-        .nc-post-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border-color: #CBD5E0;
-        }
-
-        /* Скрытый инпут */
-        .nc-post-card input[type="radio"] {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        /* Состояние: Выбрано */
-        .nc-post-card:has(input:checked) {
-            border-color: var(--nc-color-brand);
-            background-color: rgba(32, 181, 185, 0.05);
-            box-shadow: 0 4px 6px -1px rgba(32, 181, 185, 0.2);
-        }
-
-        /* Галочка при выборе */
-        .nc-post-card:has(input:checked)::after {
-            content: '✓';
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 16px;
-            height: 16px;
-            background: var(--nc-color-brand);
-            color: white;
-            border-radius: 50%;
-            font-size: 10px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .nc-post-image {
-            width: 100%;
-            height: 100px;
-            object-fit: contain;
-            margin-bottom: 12px;
-        }
-
-        .nc-post-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--nc-color-text);
-            margin-bottom: 4px;
-            line-height: 1.2;
-        }
-
-        .nc-post-desc {
-            font-size: 11px;
-            color: var(--nc-color-text-light);
-            line-height: 1.3;
-        }
-
-        /* Стили для кнопок цветов в 3D */
-        .color-controls-3d {
-            position: absolute;
-            left: 20px;
-            bottom: 20px;
-            top: auto;
-            transform: none;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(5px);
-        }
-
-        .color-group-3d {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .color-group-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
-            text-align: center;
-        }
-
-        .color-buttons-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 160px;
-        }
-
-        .color-btn-3d {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s;
-            position: relative;
-        }
-
-        .color-btn-3d:hover {
-            transform: scale(1.15);
-            z-index: 10;
-        }
-
-        .color-btn-3d.active {
-            border-color: #20B5B9;
-            transform: scale(1.1);
-        }
-
-        /* Tooltip */
-        .color-btn-3d:hover::after {
-            content: attr(title);
-            position: absolute;
-            left: 100%;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #333;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            white-space: nowrap;
-            margin-left: 10px;
-            pointer-events: none;
-        }
-
-        /* 3D Roof Type Buttons */
+        /* === NEW: Roof Type Controls 3D Overlay (Restored from Backup) === */
         .roof-type-controls-3d {
             position: absolute;
             top: 20px;
@@ -818,9 +49,9 @@
         }
 
         .roof-type-card.active {
-            border-color: #20B5B9;
+            border-color: #EB1B24;
             background: white;
-            box-shadow: 0 4px 12px rgba(32, 181, 185, 0.2);
+            box-shadow: 0 4px 12px rgba(235, 27, 36, 0.2);
         }
 
         .roof-type-card svg {
@@ -836,7 +67,7 @@
         }
 
         .roof-type-card.active svg {
-            fill: #20B5B9;
+            fill: #EB1B24;
         }
 
         .roof-type-card .info {
@@ -858,1942 +89,1015 @@
             font-weight: 500;
         }
 
-        /* === 3D Material Selector (Right Top Overlay) === */
-        .roof-material-overlay {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 100;
-        }
-
-        .material-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            padding: 8px 12px;
-            border-radius: 12px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 220px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            position: relative;
-        }
-
-        .material-card:hover {
-            background: rgba(255, 255, 255, 0.95);
-            transform: translateX(-4px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .material-card.active {
-            border-color: #20B5B9;
-            background: white;
-            box-shadow: 0 4px 12px rgba(32, 181, 185, 0.2);
-        }
-
-        /* Галочка для активного состояния */
-        .material-card.active::after {
-            content: '✓';
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            width: 18px;
-            height: 18px;
-            background: #20B5B9;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-        }
-
-        .material-preview {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            flex-shrink: 0;
-            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* --- CSS Текстуры для превью --- */
-        .preview-shingle {
-            background: repeating-linear-gradient(45deg, #6D4C41, #6D4C41 5px, #5D4037 5px, #5D4037 10px);
-        }
-
-        .preview-metal {
-            background: linear-gradient(135deg, #78909C 0%, #B0BEC5 100%);
-        }
-
-        .preview-metal::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(255, 255, 255, 0.3) 10px, transparent 12px);
-        }
-
-        .preview-profile {
-            background: #546E7A;
-            background-image: repeating-linear-gradient(90deg, transparent, transparent 5px, rgba(0, 0, 0, 0.2) 5px, rgba(0, 0, 0, 0.2) 10px);
-        }
-
-        .preview-poly {
-            background: linear-gradient(135deg, rgba(33, 150, 243, 0.6), rgba(33, 150, 243, 0.2));
-            background-image: linear-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.4) 1px, transparent 1px);
-            background-size: 8px 8px;
-        }
-
-        .material-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .material-title {
-            font-weight: 700;
-            font-size: 13px;
-            color: #2D3748;
-            margin-bottom: 2px;
-            line-height: 1.2;
-        }
-
-        .material-desc {
-            font-size: 10px;
-            color: #718096;
-            line-height: 1.2;
-            font-weight: 500;
-        }
-    </style>
-    <style>
-        /* --- MOBILE ADAPTATION (Адаптив) --- */
-        @media (max-width: 992px) {
-
-            /* Переставляем блоки: Сначала 3D, потом настройки */
-            .naves-calc {
-                display: flex;
-                flex-direction: column !important;
-            }
-
-            .naves-calc__view {
-                order: 1 !important;
-                margin-bottom: 20px;
-                min-height: 50vh;
-                /* Половина экрана под 3D */
-            }
-
-            #nc-form {
-                order: 2 !important;
-                width: 100% !important;
-                flex: none !important;
-                max-width: 100% !important;
-            }
-
-            #nc-canvas {
-                min-height: 350px;
-                height: 100%;
-            }
-        }
-
+        /* Mobile styles for 3D Overlay */
         @media (max-width: 768px) {
-            /* === UI КОМПАКТНЫЙ РЕЖИМ (МОБИЛЬНЫЙ) === */
-
-            /* --- 1. ВЕРХНЕЕ МЕНЮ (Типы кровли) --- */
             .roof-type-controls-3d {
                 top: 8px;
                 left: 8px;
                 right: 8px;
-                transform: none;
-                /* Убираем трансформ */
-                width: auto;
-                display: flex !important;
-                flex-direction: row !important;
+                display: flex;
+                flex-direction: row;
                 overflow-x: auto;
-                padding-bottom: 0;
                 gap: 6px;
-
-                /* Скрываем скролл */
-                scrollbar-width: none;
-                -ms-overflow-style: none;
-            }
-
-            .roof-type-controls-3d::-webkit-scrollbar {
-                display: none;
             }
 
             .roof-type-card {
-                flex: 0 0 auto;
-                /* Не сжимать, но и не растягивать на весь экран */
-                width: auto;
                 min-width: 80px;
                 padding: 6px 8px;
-                margin-bottom: 0;
-
-                display: flex;
                 flex-direction: column;
-                /* Вертикальная компоновка: Иконка сверху */
-                align-items: center;
-                justify-content: center;
                 text-align: center;
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: none !important;
-                /* Убираем блюр для производительности */
-            }
-
-            .roof-type-card svg {
-                width: 24px;
-                /* Уменьшаем иконки */
-                height: 24px;
-                margin-bottom: 2px;
-            }
-
-            .roof-type-card .info {
-                align-items: center;
-            }
-
-            .roof-type-card .title {
-                font-size: 10px;
-                /* Компактный шрифт */
-                line-height: 1.1;
-                margin-bottom: 0;
+                backdrop-filter: none;
             }
 
             .roof-type-card .desc {
                 display: none;
-                /* ХИДДЕН: Скрываем описание */
             }
+        }
+    </style>
+    <style>
+        /* Critical Styles for 3D Canvas integration */
+        #nc-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
 
+        /* 3D Overlays */
+        .color-controls-3d {
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+        }
 
-            /* --- 2. НИЖНЕЕ МЕНЮ (Материалы) --- */
-            .roof-material-overlay {
-                top: auto;
-                bottom: 8px;
-                left: 8px;
-                right: 8px;
+        .roof-type-controls-3d {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
-                flex-direction: row !important;
-                align-items: flex-end;
-                overflow-x: auto;
-                padding-bottom: 0;
-                justify-content: flex-start;
-                gap: 6px;
+        .roof-material-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
-                scrollbar-width: none;
-                -ms-overflow-style: none;
-            }
+        /* Ensure images-block handles canvas correctly */
+        .images-block {
+            position: relative;
+            overflow: hidden;
+            padding: 0 !important;
+            /* Override template padding to let canvas fill */
+            background: #f0f0f0;
+        }
 
-            .roof-material-overlay::-webkit-scrollbar {
-                display: none;
-            }
+        /* Fix relative paths for existing 3D overlay items if their CSS was removed */
+        .roof-type-card,
+        .material-card {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
 
-            .material-card {
-                margin-bottom: 0;
-                width: auto;
-                min-width: 80px;
+        .roof-type-card.active,
+        .material-card.active {
+            border: 2px solid #EB1B24;
+            background: #fff5f5;
+        }
 
-                display: flex;
-                flex-direction: column;
-                /* Вертикально */
-                align-items: center;
-                justify-content: center;
-                text-align: center;
+        .roof-type-card svg {
+            width: 40px;
+            height: 40px;
+        }
 
-                flex: 0 0 auto;
-                transform: none !important;
-                border-radius: 8px;
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: none !important;
-                gap: 4px;
-            }
+        .color-btn-3d {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
 
-            .material-card .material-info {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .material-preview {
-                width: 28px;
-                height: 28px;
-                border-radius: 6px;
-                margin-bottom: 2px;
-            }
-
-            .material-title {
-                font-size: 10px;
-                white-space: normal;
-                line-height: 1.1;
-                margin-bottom: 0;
-            }
-
-            .material-desc {
-                display: none;
-                /* ХИДДЕН: Скрываем описание */
-            }
-
-            /* Галочка выбора - поменьше */
-            .material-card.active::after {
-                width: 14px;
-                height: 14px;
-                font-size: 9px;
-                top: -4px;
-                right: -4px;
-            }
-
-            /* --- 3. ОБЩИЕ ОТСТУПЫ --- */
-            .naves-calc-wrapper {
-                padding: 8px !important;
-            }
-
-            .naves-calc,
-            .naves-calc__view,
-            #nc-form {
-                padding: 12px !important;
-                gap: 12px !important;
-                border-radius: 12px !important;
-            }
-
-            /* --- 4. ЦВЕТА (Справа вертикально) --- */
-            /* --- 4. ЦВЕТА (Справа вертикально) --- */
-            .color-controls-3d {
-                display: flex !important;
-                flex-direction: column;
-                position: absolute;
-                top: 50%;
-                right: 8px;
-                transform: translateY(-50%);
-                gap: 12px;
-                /* Меньше отступ между группами */
-                pointer-events: none;
-                z-index: 90;
-                width: auto;
-                height: auto;
-                background: none;
-                left: auto;
-                bottom: auto;
-            }
-
-            .color-group-3d {
-                pointer-events: auto;
-                background: rgba(255, 255, 255, 0.9);
-                border-radius: 16px;
-                padding: 6px 4px;
-                /* Компактнее */
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 4px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            }
-
-            /* Скрываем разделитель */
-            .color-controls-3d>div[style*="height: 1px"] {
-                display: none !important;
-            }
-
-            .color-group-title {
-                display: none;
-            }
-
-            .color-buttons-row {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-                /* Меньше отступ между кнопками */
-            }
-
-            .color-btn-3d {
-                width: 22px;
-                /* Чуть меньше кнопки */
-                height: 22px;
-                border-radius: 50%;
-                border: 2px solid white;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-                cursor: pointer;
-            }
-
-            .color-btn-3d.active {
-                transform: scale(1.25);
-                border-color: #20B5B9;
-                box-shadow: 0 0 0 2px rgba(32, 181, 185, 0.3);
-            }
-
-            #nc-canvas {
-                min-height: 400px;
-                /* Побольше места для модели */
-                border-radius: 12px;
-            }
-
-            /* Уменьшаем заголовок цены */
-            .nc-summary__price {
-                font-size: 28px !important;
-                margin-bottom: 15px !important;
-            }
+        .color-btn-3d.active {
+            border-color: #EB1B24;
+            transform: scale(1.1);
         }
     </style>
 </head>
 
 <body>
-    <!-- ✅ УДАЛЕНО: Отладочный макет (debug-layout) -->
 
-    <!-- ОРИГИНАЛЬНЫЙ МАКЕТ -->
-    <div style="display: block;">
-        <div class="naves-calc-wrapper">
-            <div class="naves-calc">
-                <section id="nc-form"></section>
-                <section class="naves-calc__view">
-                    <div class="calculator-right-img-block">
-
-
-                        <div class="images-block flex aic jcc posr bg-f9 round-10">
-                            <!-- Кнопки выбора типа кровли (3D Overlay) -->
-                            <div class="roof-type-controls-3d">
-                                <div class="roof-type-card" data-value="var-1">
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M21 6L3 13V16H21V6Z" />
-                                        <rect x="3" y="18" width="18" height="2" fill-opacity="0.3" />
-                                    </svg>
-                                    <div class="info">
-                                        <span class="title">Односкатная</span>
-                                        <span class="desc">Современный стиль</span>
-                                    </div>
-                                </div>
-                                <div class="roof-type-card" data-value="var-3">
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M12 3L2 12H22L12 3Z" />
-                                        <path d="M12 3V12M7 12L12 7L17 12" stroke="white" stroke-width="1.5"
-                                            fill="none" />
-                                    </svg>
-                                    <div class="info">
-                                        <span class="title">W-образная</span>
-                                        <span class="desc">Усиленная ферма</span>
-                                    </div>
-                                </div>
-                                <div class="roof-type-card" data-value="var-2">
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M12 3L2 12H22L12 3Z" />
-                                        <path d="M12 3V12 M7 12L12 6 M17 12L12 6" stroke="white" stroke-width="1.5"
-                                            fill="none" />
-                                    </svg>
-                                    <div class="info">
-                                        <span class="title">M-образная</span>
-                                        <span class="desc">Классический вид</span>
-                                    </div>
+    <div class="wrap-cont oh">
+        <div class="f2 title-f2 fz25 fw600 ttu lh mb-20 hide_cl show_992">Калькулятор
+            <br> расчета навеса
+        </div>
+        <section class="calculator-row flex gap-40 mb-60 mb-20m">
+            <div class="calculator-left fxg">
+                <div class="f2 title-f2 fz40 fw600 ttu lh mb-55 hide_992">Калькулятор
+                    <br> расчета навеса
+                </div>
+                <div class="calculator-date">
+                    <dl class="calculator-date-item calculator-date-item--type mb-55" style="display:none;">
+                        <dt class="name f2 fz16 fw600 ttu lh130 mb-30">ФОРМА КРОВЛИ</dt>
+                        <dd class="type-row-raido flex fxww gap-20">
+                            <!-- Roof Types -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input checked class="hide_cl view-param-input" type="radio" name="roofType"
+                                        value="var-1" id="type-karkas-var-1">
+                                    <label for="type-karkas-var-1" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <svg viewBox="0 0 24 24" style="width: 50px; height: 50px;">
+                                            <path d="M21 6L3 13V16H21V6Z" fill="#3E414A" />
+                                            <rect x="3" y="18" width="18" height="2" fill="#3E414A"
+                                                fill-opacity="0.3" />
+                                        </svg>
+                                        <div class="fz13 fw600 mt-10">Односкатная</div>
+                                        <div class="fz11 gray mt-5">Современный стиль</div>
+                                    </label>
                                 </div>
                             </div>
-
-                            <!-- Кнопки выбора материала кровли (3D Overlay) -->
-                            <div class="roof-material-overlay">
-                                <div class="material-card active" data-value="metal-grandline">
-                                    <div class="material-preview preview-metal"></div>
-                                    <div class="material-info">
-                                        <span class="material-title">Металлочерепица</span>
-                                        <span class="material-desc">Классика + снегозадержатели</span>
-                                    </div>
-                                </div>
-                                <div class="material-card" data-value="shinglas-sonata">
-                                    <div class="material-preview preview-shingle"></div>
-                                    <div class="material-info">
-                                        <span class="material-title">Гибкая черепица</span>
-                                        <span class="material-desc">Тихо, аккуратно</span>
-                                    </div>
-                                </div>
-                                <div class="material-card" data-value="profiled-gl35r">
-                                    <div class="material-preview preview-profile"></div>
-                                    <div class="material-info">
-                                        <span class="material-title">Профнастил</span>
-                                        <span class="material-desc">Практично и надёжно</span>
-                                    </div>
-                                </div>
-                                <div class="material-card" data-value="polycarbonate-8mm">
-                                    <div class="material-preview preview-poly"></div>
-                                    <div class="material-info">
-                                        <span class="material-title">Поликарбонат</span>
-                                        <span class="material-desc">Пропускает свет</span>
-                                    </div>
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input class="hide_cl view-param-input" type="radio" name="roofType" value="var-3"
+                                        id="type-karkas-var-3">
+                                    <label for="type-karkas-var-3" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <svg viewBox="0 0 24 24" style="width: 50px; height: 50px;">
+                                            <path d="M12 3L2 12H22L12 3Z" fill="#3E414A" />
+                                            <path d="M12 3V12M7 12L12 7L17 12" stroke="white" stroke-width="1.5"
+                                                fill="none" />
+                                        </svg>
+                                        <div class="fz13 fw600 mt-10">W-образная</div>
+                                        <div class="fz11 gray mt-5">Усиленная ферма</div>
+                                    </label>
                                 </div>
                             </div>
-
-                            <canvas id="nc-canvas" style="width: 100%; height: 100%;"></canvas>
-
-                            <!-- Врезка ПАНЕЛИ ЦВЕТОВ в 3D окно -->
-                            <div class="color-controls-3d">
-
-
-                                <!-- Цвет кровли -->
-                                <div class="color-group-3d">
-                                    <div class="color-group-title">Цвет кровли</div>
-                                    <div class="color-buttons-row">
-                                        <div class="color-btn-3d ${params.roofColor==='amber'?'active':''}"
-                                            style="background: #CD7F32;" title="Янтарь" data-param="roofColor"
-                                            data-value="amber"></div>
-                                        <div class="color-btn-3d ${params.roofColor==='red'?'active':''}"
-                                            style="background: #582329;" title="Красный (RAL 3005)"
-                                            data-param="roofColor" data-value="red"></div>
-                                        <div class="color-btn-3d ${params.roofColor==='green'?'active':''}"
-                                            style="background: #0F4336;" title="Зеленый (RAL 6005)"
-                                            data-param="roofColor" data-value="green"></div>
-                                        <div class="color-btn-3d ${params.roofColor==='blue'?'active':''}"
-                                            style="background: #004D91;" title="Синий (RAL 5005)" data-param="roofColor"
-                                            data-value="blue"></div>
-                                        <div class="color-btn-3d ${params.roofColor==='brown'?'active':''}"
-                                            style="background: #45322E;" title="Коричневый (RAL 8017)"
-                                            data-param="roofColor" data-value="brown"></div>
-                                        <div class="color-btn-3d ${params.roofColor==='gray'?'active':''}"
-                                            style="background: #474A51;" title="Серый (RAL 7024)" data-param="roofColor"
-                                            data-value="gray"></div>
-                                    </div>
-                                </div>
-
-                                <div style="width: 100%; height: 1px; background: #eee; margin: 5px 0;"></div>
-
-                                <!-- Цвет каркаса -->
-                                <div class="color-group-3d">
-                                    <div class="color-group-title">Цвет каркаса</div>
-                                    <div class="color-buttons-row">
-                                        <div class="color-btn-3d ${params.frameColoring==='no-coloring'?'active':''}"
-                                            style="background: #E6D0A5;" title="Без окраса (Сосна)"
-                                            data-param="frameColoring" data-value="no-coloring"></div>
-                                        <div class="color-btn-3d ${params.frameColoring==='neomid'?'active':''}"
-                                            style="background: #D4C179;" title="Neomid (Пропитка)"
-                                            data-param="frameColoring" data-value="neomid"></div>
-                                        <div class="color-btn-3d ${params.frameColoring==='texturol-landscape'?'active':''}"
-                                            style="background: #8D6E63;" title="Texturol Landscape"
-                                            data-param="frameColoring" data-value="texturol-landscape"></div>
-                                        <div class="color-btn-3d ${params.frameColoring==='texturol-country'?'active':''}"
-                                            style="background: #4E342E;" title="Texturol Country"
-                                            data-param="frameColoring" data-value="texturol-country"></div>
-                                        <div class="color-btn-3d ${params.frameColoring==='olsta'?'active':''}"
-                                            style="background: #A1887F;" title="Olsta" data-param="frameColoring"
-                                            data-value="olsta"></div>
-                                        <div class="color-btn-3d ${params.frameColoring==='tikkurila'?'active':''}"
-                                            style="background: #F0F0F0; border: 1px solid #ddd;"
-                                            title="Tikkurila (Белый)" data-param="frameColoring" data-value="tikkurila">
-                                        </div>
-                                    </div>
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input class="hide_cl view-param-input" type="radio" name="roofType" value="var-2"
+                                        id="type-karkas-var-2">
+                                    <label for="type-karkas-var-2" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <svg viewBox="0 0 24 24" style="width: 50px; height: 50px;">
+                                            <path d="M12 3L2 12H22L12 3Z" fill="#3E414A" />
+                                            <path d="M12 3V12 M7 12L12 6 M17 12L12 6" stroke="white" stroke-width="1.5"
+                                                fill="none" />
+                                        </svg>
+                                        <div class="fz13 fw600 mt-10">M-образная</div>
+                                        <div class="fz11 gray mt-5">Классический вид</div>
+                                    </label>
                                 </div>
                             </div>
+                        </dd>
+                    </dl>
 
-                            <!-- Кнопки управления видами удалены -->
+                    <!-- Post Types -->
+                    <dl class="calculator-date-item calculator-date-item--type mb-55">
+                        <dt class="name f2 fz16 fw600 ttu lh130 mb-30">Тип столбов</dt>
+                        <dd class="type-row-raido flex fxww gap-20">
+                            <!-- Var 1: Куст с пяткой сверху -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input class="hide_cl view-param-input" type="radio" name="postType" value="var-1"
+                                        id="pt-1">
+                                    <label for="pt-1" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <img src="./assets/images/stolb/st1 .webp"
+                                            style="height:50px; object-fit:contain;">
+                                        <div class="fz13 fw600 mt-10">Куст (верх)</div>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Var 2: Простой -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input class="hide_cl view-param-input" type="radio" name="postType" value="var-2"
+                                        id="pt-2">
+                                    <label for="pt-2" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <img src="./assets/images/stolb/st2.webp"
+                                            style="height:50px; object-fit:contain;">
+                                        <div class="fz13 fw600 mt-10">Простой</div>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Var 3: С капителью -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input class="hide_cl view-param-input" type="radio" name="postType" value="var-3"
+                                        id="pt-3">
+                                    <label for="pt-3" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <img src="./assets/images/stolb/st3 .webp"
+                                            style="height:50px; object-fit:contain;">
+                                        <div class="fz13 fw600 mt-10">С капителью</div>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Var 4: Капитель + Пятка -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input class="hide_cl view-param-input" type="radio" name="postType" value="var-4"
+                                        id="pt-4">
+                                    <label for="pt-4" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <img src="./assets/images/stolb/st4.webp"
+                                            style="height:50px; object-fit:contain;">
+                                        <div class="fz13 fw600 mt-10">Полный декор</div>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Var 5: С пяткой снизу (Default) -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input checked class="hide_cl view-param-input" type="radio" name="postType"
+                                        value="var-5" id="pt-5">
+                                    <label for="pt-5" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <img src="./assets/images/stolb/st5.webp"
+                                            style="height:50px; object-fit:contain;">
+                                        <div class="fz13 fw600 mt-10">С пяткой (низ)</div>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Var 6 -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input class="hide_cl view-param-input" type="radio" name="postType" value="var-6"
+                                        id="pt-6">
+                                    <label for="pt-6" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <img src="./assets/images/stolb/st6.webp"
+                                            style="height:50px; object-fit:contain;">
+                                        <div class="fz13 fw600 mt-10">Тип 6</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </dd>
+                    </dl>
+
+                    <!-- Brace Types -->
+                    <dl class="calculator-date-item calculator-date-item--type mb-55">
+                        <dt class="name f2 fz16 fw600 ttu lh130 mb-30">Тип раскосов</dt>
+                        <dd class="type-row-raido flex fxww gap-20">
+                            <!-- Var 1 -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input checked class="hide_cl view-param-input" type="radio" name="braceType"
+                                        value="var-1" id="bt-1">
+                                    <label for="bt-1" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <img src="./assets/images/raskos/1 (1).webp"
+                                            style="height:40px; object-fit:contain;">
+                                        <div class="fz10 fw600 mt-5">Стандарт</div>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Var 2 -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input class="hide_cl view-param-input" type="radio" name="braceType" value="var-2"
+                                        id="bt-2">
+                                    <label for="bt-2" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <img src="./assets/images/raskos/2 (1).webp"
+                                            style="height:40px; object-fit:contain;">
+                                        <div class="fz10 fw600 mt-5">Тип 2</div>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Var 3 -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input class="hide_cl view-param-input" type="radio" name="braceType" value="var-3"
+                                        id="bt-3">
+                                    <label for="bt-3" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <img src="./assets/images/raskos/3 (1).webp"
+                                            style="height:40px; object-fit:contain;">
+                                        <div class="fz10 fw600 mt-5">Тип 3</div>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Var 4 -->
+                            <div class="type-row-raido-col">
+                                <div class="raido-image">
+                                    <input class="hide_cl view-param-input" type="radio" name="braceType" value="var-4"
+                                        id="bt-4">
+                                    <label for="bt-4" class="flex aic jcc round-10 bg-f5 pointer fd-c p-10"
+                                        style="padding:10px; height:auto;">
+                                        <img src="./assets/images/raskos/4 (1).webp"
+                                            style="height:40px; object-fit:contain;">
+                                        <div class="fz10 fw600 mt-5">Тип 4</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </dd>
+                    </dl>
+                    <div class="calculator-list flex fxww gap-20 rgap-30 mb-35 mb-20m">
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">длина, м</dt>
+                            <dd class="has-slider bg-f9 round-10 flex aic jcsb posr" data-min="1" data-max="22"
+                                data-value="11" data-step="1" data-param="length">
+                                <div class="ot path fz17"><span>от</span>1м</div>
+                                <div class="value fz20 fw600 center flex aic"><span>11</span>м</div>
+                                <div class="do path fz17"><span>до</span>22м</div>
+                                <div class="ui-container absolute w-full">
+                                    <div class="slider"></div>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">ширина, м</dt>
+                            <dd class="has-slider bg-f9 round-10 flex aic jcsb posr" data-min="1" data-max="22"
+                                data-value="6" data-step="1" data-param="width">
+                                <div class="ot path fz17"><span>от</span>1м</div>
+                                <div class="value fz20 fw600 center flex aic"><span>6</span>м</div>
+                                <div class="do path fz17"><span>до</span>22м</div>
+                                <div class="ui-container absolute w-full">
+                                    <div class="slider"></div>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">высота столбов, м</dt>
+                            <dd class="has-slider bg-f9 round-10 flex aic jcsb posr" data-min="1" data-max="5"
+                                data-value="2.5" data-step="0.1" data-param="height">
+                                <div class="ot path fz17"><span>от</span>1м</div>
+                                <div class="value fz20 fw600 center flex aic"><span>2.5</span>м</div>
+                                <div class="do path fz17"><span>до</span>5м</div>
+                                <div class="ui-container absolute w-full">
+                                    <div class="slider"></div>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">высота скатов, м</dt>
+                            <dd class="has-slider bg-f9 round-10 flex aic jcsb posr" data-min="0.1" data-max="3"
+                                data-value="1.5" data-step="0.1" data-param="roofHeight">
+                                <div class="ot path fz17"><span>от</span>0.1м</div>
+                                <div class="value fz20 fw600 center flex aic"><span>1.5</span>м</div>
+                                <div class="do path fz17"><span>до</span>3м</div>
+                                <div class="ui-container absolute w-full">
+                                    <div class="slider"></div>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Шаг столбов, м</dt>
+                            <dd class="has-slider bg-f9 round-10 flex aic jcsb posr" data-min="1" data-max="3.5"
+                                data-value="2.5" data-step="0.1" data-param="postSpacing">
+                                <div class="ot path fz17"><span>от</span>1м</div>
+                                <div class="value fz20 fw600 center flex aic"><span>2.5</span>м</div>
+                                <div class="do path fz17"><span>до</span>3.5м</div>
+                                <div class="ui-container absolute w-full">
+                                    <div class="slider"></div>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width: 48%;">
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Свес спереди, мм</dt>
+                            <dd class="has-slider bg-f9 round-10 flex aic jcsb posr" data-min="0" data-max="500"
+                                data-value="200" data-step="10" data-param="frontBeamExtension">
+                                <div class="ot path fz17"><span>от</span>0</div>
+                                <div class="value fz20 fw600 center flex aic"><span>200</span></div>
+                                <div class="do path fz17"><span>до</span>500</div>
+                                <div class="ui-container absolute w-full">
+                                    <div class="slider"></div>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width: 48%;">
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Свес сзади, мм</dt>
+                            <dd class="has-slider bg-f9 round-10 flex aic jcsb posr" data-min="0" data-max="500"
+                                data-value="200" data-step="10" data-param="backBeamExtension">
+                                <div class="ot path fz17"><span>от</span>0</div>
+                                <div class="value fz20 fw600 center flex aic"><span>200</span></div>
+                                <div class="do path fz17"><span>до</span>500</div>
+                                <div class="ui-container absolute w-full">
+                                    <div class="slider"></div>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Сечение столбов</dt>
+                            <dd>
+                                <select class="bg-f9 round-10 w-full p-15 fz16 fw500 view-param-input" id="postMaterial"
+                                    style="border:none; outline:none; height: 50px;">
+                                    <option value="glued-100x100">Клееный брус 100×100</option>
+                                    <option value="glued-150x150" selected>Клееный брус 150×150</option>
+                                    <option value="glued-200x200">Клееный брус 200×200</option>
+                                </select>
+                            </dd>
+                        </dl>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Каркас</dt>
+                            <dd>
+                                <select class="bg-f9 round-10 w-full p-15 fz16 fw500 view-param-input"
+                                    id="frameMaterial" style="border:none; outline:none; height: 50px;">
+                                    <option value="pine" selected>Сосна</option>
+                                    <option value="larch">Лиственница</option>
+                                    <option value="oak">Дуб</option>
+                                </select>
+                            </dd>
+                        </dl>
+
+                        <!-- Rafters / Trusses -->
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Сечение ферм</dt>
+                            <dd>
+                                <select class="bg-f9 round-10 w-full p-15 fz16 fw500 view-param-input"
+                                    id="trussMaterial" style="border:none; outline:none; height: 50px;">
+                                    <option value="planed-45x190" selected>45х190 мм</option>
+                                    <option value="planed-35x190">35х190 мм</option>
+                                    <option value="planed-50x150">50х150 мм</option>
+                                </select>
+                            </dd>
+                        </dl>
+
+                        <!-- Roofing Section -->
+                        <div class="w-full mt-20 mb-10">
+                            <h3 class="name f2 fz16 fw600 ttu lh130">Кровельная система</h3>
                         </div>
 
-                        <div class="path-bottom flex aic jcsb fz18 fz11m fw500">
-                            <div class="link-360">
-                                🔄 Зажмите левую кнопку мыши для вращения, колесико для зума
-                            </div>
-                            <a href="#smeta" class="scroll-link red lh110 hide_992">Подробная смета</a>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Материал кровли</dt>
+                            <dd>
+                                <select class="bg-f9 round-10 w-full p-15 fz16 fw500 view-param-input"
+                                    id="roofingMaterial" style="border:none; outline:none; height: 50px;">
+                                    <option value="metal-grandline" selected>Металлочерепица</option>
+                                    <option value="shinglas-sonata">Гибкая черепица</option>
+                                    <option value="profiled-gl35r">Профнастил</option>
+                                    <option value="polycarbonate-8mm">Поликарбонат</option>
+                                    <option value="no-roofing">Без кровли</option>
+                                </select>
+                            </dd>
+                        </dl>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Цвет кровли</dt>
+                            <dd>
+                                <select class="bg-f9 round-10 w-full p-15 fz16 fw500 view-param-input" id="roofColor"
+                                    style="border:none; outline:none; height: 50px;">
+                                    <option value="amber">Янтарь</option>
+                                    <option value="red">Красный</option>
+                                    <option value="green">Зеленый</option>
+                                    <option value="gray">Серый</option>
+                                    <option value="brown" selected>Коричневый</option>
+                                </select>
+                            </dd>
+                        </dl>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Водосток</dt>
+                            <dd>
+                                <select class="bg-f9 round-10 w-full p-15 fz16 fw500 view-param-input" id="gutterSystem"
+                                    style="border:none; outline:none; height: 50px;">
+                                    <option value="none">Нет</option>
+                                    <option value="grandline-pvc" selected>GrandLine PVC</option>
+                                    <option value="grandline-metal">GrandLine Metal</option>
+                                </select>
+                            </dd>
+                        </dl>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Монтаж</dt>
+                            <dd>
+                                <select class="bg-f9 round-10 w-full p-15 fz16 fw500 view-param-input"
+                                    id="mountingRequired" style="border:none; outline:none; height: 50px;">
+                                    <option value="yes" selected>Требуется</option>
+                                    <option value="no">Нет</option>
+                                </select>
+                            </dd>
+                        </dl>
+                        <dl>
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Доставка (км от МКАД)</dt>
+                            <dd class="has-slider bg-f9 round-10 flex aic jcsb posr" data-min="0" data-max="100"
+                                data-value="10" data-step="1" data-param="distanceFromMKAD">
+                                <div class="ot path fz17"><span>от</span>0</div>
+                                <div class="value fz20 fw600 center flex aic"><span>10</span>км</div>
+                                <div class="do path fz17"><span>до</span>100</div>
+                                <div class="ui-container absolute w-full">
+                                    <div class="slider"></div>
+                                </div>
+                            </dd>
+                        </dl>
+                        <dl style="width: 100%;">
+                            <dt class="name f2 fz16 fw600 ttu lh130 mb-15">Свес с боков, мм</dt>
+                            <dd class="has-slider bg-f9 round-10 flex aic jcsb posr" data-min="0" data-max="1000"
+                                data-value="100" data-step="50" data-param="sideOverhang">
+                                <div class="ot path fz17"><span>от</span>0</div>
+                                <div class="value fz20 fw600 center flex aic"><span>100</span></div>
+                                <div class="do path fz17"><span>до</span>1000</div>
+                                <div class="ui-container absolute w-full">
+                                    <div class="slider"></div>
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="calculator-right fxs">
+                <div class="calculator-right-img-block">
+                    <div class="path-top flex aic jcsb mb-25 hide_992">
+                        <div class="path-top-info">
+                            <div class="price f2 fz35 fw600 lh ttu"><span id="totalPrice">0</span> р.</div>
+                            <a href="#smeta" class="fz13 fw500 red scroll-link hide_cl show_992">Подробная смета</a>
+                        </div>
+
+                        <div class="button-row flex gap-20">
+                            <a href="#" onclick="makeOrder(); return false;"
+                                class="btn btn-63 bg-red round-5 flex aic jcc fz17 fw600 fff">Сделать заказ</a>
                         </div>
                     </div>
-                    <div id="nc-summary"></div>
-                </section>
+                    <div class="images-block posr round-20 flex aic jcc bg-f5 mb-20">
+                        <!-- 3D CANVAS AND OVERLAYS -->
+
+                        <!-- Roof Type Controls Overlay (New) -->
+                        <div class="roof-type-controls-3d">
+                            <div class="roof-type-card" data-value="var-1">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M21 6L3 13V16H21V6Z" />
+                                    <rect x="3" y="18" width="18" height="2" fill-opacity="0.3" />
+                                </svg>
+                                <div class="info">
+                                    <span class="title">Односкатная</span>
+                                    <span class="desc">Современный стиль</span>
+                                </div>
+                            </div>
+                            <div class="roof-type-card" data-value="var-3">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 3L2 12H22L12 3Z" />
+                                    <path d="M12 3V12M7 12L12 7L17 12" stroke="white" stroke-width="1.5" fill="none" />
+                                </svg>
+                                <div class="info">
+                                    <span class="title">W-образная</span>
+                                    <span class="desc">Усиленная ферма</span>
+                                </div>
+                            </div>
+                            <div class="roof-type-card" data-value="var-2">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 3L2 12H22L12 3Z" />
+                                    <path d="M12 3V12 M7 12L12 6 M17 12L12 6" stroke="white" stroke-width="1.5"
+                                        fill="none" />
+                                </svg>
+                                <div class="info">
+                                    <span class="title">M-образная</span>
+                                    <span class="desc">Классический вид</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Canvas -->
+                        <canvas id="nc-canvas"></canvas>
+
+                        <!-- Color Controls Overlay -->
+                        <!-- Color Controls Overlay -->
+                        <div class="color-controls-3d">
+                            <div class="color-group-3d">
+                                <div class="color-group-title"
+                                    style="display:block; font-size:10px; margin-bottom:5px;">Цвет кровли</div>
+                                <div class="color-buttons-row">
+                                    <div class="color-btn-3d active" style="background: #CD7F32;" title="Янтарь"
+                                        data-param="roofColor" data-value="amber"></div>
+                                    <div class="color-btn-3d" style="background: #582329;" title="Красный"
+                                        data-param="roofColor" data-value="red"></div>
+                                    <div class="color-btn-3d" style="background: #0F4336;" title="Зеленый"
+                                        data-param="roofColor" data-value="green"></div>
+                                    <div class="color-btn-3d" style="background: #45322E;" title="Коричневый"
+                                        data-param="roofColor" data-value="brown"></div>
+                                    <div class="color-btn-3d" style="background: #474A51;" title="Серый"
+                                        data-param="roofColor" data-value="gray"></div>
+                                </div>
+                            </div>
+
+                            <!-- NEW: Frame Color Group -->
+                            <div class="color-group-3d" style="margin-top: 10px;">
+                                <div class="color-group-title"
+                                    style="display:block; font-size:10px; margin-bottom:5px;">Цвет каркаса</div>
+                                <div class="color-buttons-row"
+                                    style="overflow-x: auto; padding-bottom: 5px; justify-content: flex-start; gap: 8px;">
+                                    <div class="color-btn-3d active" style="background: #E6D0A5;" title="Без окраса"
+                                        data-param="frameColoring" data-value="no-coloring"></div>
+                                    <div class="color-btn-3d" style="background: #D4C179;" title="Neomid"
+                                        data-param="frameColoring" data-value="neomid"></div>
+                                    <div class="color-btn-3d" style="background: #E6C288;" title="Текстурол Ландшафт"
+                                        data-param="frameColoring" data-value="texturol-landscape"></div>
+                                    <div class="color-btn-3d" style="background: #757575;" title="Текстурол Кантри"
+                                        data-param="frameColoring" data-value="texturol-country"></div>
+                                    <div class="color-btn-3d" style="background: #A0522D;" title="Symphony wood-guard"
+                                        data-param="frameColoring" data-value="symphony"></div>
+                                    <div class="color-btn-3d" style="background: #8B4513;" title="Olsta"
+                                        data-param="frameColoring" data-value="olsta"></div>
+                                    <div class="color-btn-3d" style="background: #F5F5F0;" title="Tikkurila VINHA"
+                                        data-param="frameColoring" data-value="tikkurila-vinha"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="path-bottom flex aic jcsb fz18 fz11m fw500">
+                        <a href="" class="link-360 flex aic gap-15">
+                            <i data-svg='./assets/images/images-calc/360.svg'></i> Кликните и тяните для вращения 3D
+                        </a>
+                    </div>
+                </div>
             </div>
+        </section>
 
-            <!-- Уточнение дизайна (генерируется через MVP) -->
-            <div class="design-refinement-container"></div>
+        <section class="total-data fz18 fz14m fw600">
+            <!-- Placeholder for dynamic totals -->
+            <div class="total-data-row flex fxww grid-3">
+                <div class="total-data-col">
+                    <div class="total-data-item flex jcsb">Площадь <div class="value def tar" id="specArea">0 м²</div>
+                    </div>
+                </div>
+                <div class="total-data-col">
+                    <div class="total-data-item flex jcsb">Тип кровли <div class="value def tar" id="specRoofType">...
+                        </div>
+                    </div>
+                </div>
+                <div class="total-data-col">
+                    <div class="total-data-item flex jcsb">Размеры <div class="value def tar"><span
+                                id="specLength"></span> x <span id="specWidth"></span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-            <!-- Уточнение параметров каркаса (генерируется через MVP) -->
-            <div class="frame-params-refinement-container"></div>
+        <!-- Dummy container for CanopyView compatibility -->
+        <div id="nc-form" style="display:none;"></div>
+        <div id="nc-summary" style="display:none;"></div>
 
-            <!-- Спецификация навеса -->
-            <section class="specification" id="smeta">
-                <h2>спецификация навеса</h2>
+        <section class="specification bg-f9" style="margin-top: 50px; padding: 30px; border-radius: 20px;">
+            <div class="wrap-cont">
+                <h2 class="f2 fz30 fz20m fw600 ttu lh120 mb-30 mb-15m">спецификация навеса</h2>
                 <div class="mb-30">
-                    <dl>
-                        <dt class="flex aic f2 pointer">
-                            <div class="num">01.</div>
-                            <div class="name">общие параметры</div>
-                            <div class="arrow">▼</div>
+                    <!-- 01. General -->
+                    <dl class="mb-20">
+                        <dt class="flex aic f2 pointer"
+                            style="cursor: pointer; padding: 10px; background: white; border-radius: 10px; margin-bottom: 5px;">
+                            <div class="num fz16 fw600 lh140 red fxs" style="color: #e53935; margin-right: 15px;">01.
+                            </div>
+                            <div class="name fz18 fz13m fw600 lh120 ttu fxg">Общие параметры</div>
+                            <div class="arrow tr" style="margin-left: auto;">▼</div>
                         </dt>
-                        <dd>
-                            <ul>
-                                <li>
-                                    <div class="num">1.1</div>
-                                    <div class="parameter">Тип навеса</div>
-                                    <div class="value" id="specRoofType">Двускатный</div>
+                        <dd class="fz18 fz13m fw600 lh120 hide_cl"
+                            style="display: none; padding: 20px; background: white; border-radius: 0 0 10px 10px;">
+                            <ul style="list-style: none; padding: 0;">
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Тип навеса</div>
+                                    <div class="value" id="specRoofTypeDetailed">--</div>
                                 </li>
-                                <li>
-                                    <div class="num">1.2</div>
-                                    <div class="parameter">Материал каркаса</div>
-                                    <div class="value" id="specFrameMaterial">Сосна</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Материал каркаса</div>
+                                    <div class="value" id="specFrameMaterialDetailed">--</div>
                                 </li>
-                                <li>
-                                    <div class="num">1.3</div>
-                                    <div class="parameter">Материал кровли</div>
-                                    <div class="value" id="specRoofingMaterial">Металлочерепица</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Цвет каркаса</div>
+                                    <div class="value" id="specFrameColorDetailed">--</div>
                                 </li>
-                                <li>
-                                    <div class="num">1.4</div>
-                                    <div class="parameter">Цвет кровли</div>
-                                    <div class="value" id="specRoofColor">Янтарь</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Материал кровли</div>
+                                    <div class="value" id="specRoofingMaterialDetailed">--</div>
                                 </li>
-                                <li>
-                                    <div class="num">1.5</div>
-                                    <div class="parameter">Площадь</div>
-                                    <div class="value" id="specArea">66.0м²</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Цвет кровли</div>
+                                    <div class="value" id="specRoofColorDetailed">--</div>
                                 </li>
-                                <li>
-                                    <div class="num">1.6</div>
-                                    <div class="parameter">Ширина по осям</div>
-                                    <div class="value" id="specWidth">6 000 мм</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Площадь (пятно застройки)</div>
+                                    <div class="value" id="specAreaDetailed">0 м²</div>
                                 </li>
-                                <li>
-                                    <div class="num">1.7</div>
-                                    <div class="parameter">Длина по ригелю</div>
-                                    <div class="value" id="specLength">11 400 мм</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Ширина по осям</div>
+                                    <div class="value" id="specWidthDetailed">0 мм</div>
                                 </li>
-                                <li>
-                                    <div class="num">1.8</div>
-                                    <div class="parameter">Высота столбов</div>
-                                    <div class="value" id="specHeight">3 000 мм</div>
-                                </li>
-                                <li>
-                                    <div class="num">1.9</div>
-                                    <div class="parameter">Высота скатов</div>
-                                    <div class="value" id="specRoofHeight">1 500 мм</div>
-                                </li>
-                                <li>
-                                    <div class="num">1.10</div>
-                                    <div class="parameter">Шаг столбов</div>
-                                    <div class="value" id="specPostSpacing">2 500 мм</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Длина по ригелю</div>
+                                    <div class="value" id="specLengthDetailed">0 мм</div>
                                 </li>
                             </ul>
                         </dd>
                     </dl>
-                    <dl>
-                        <dt class="flex aic f2 pointer">
-                            <div class="num">02.</div>
-                            <div class="name">столбы</div>
-                            <div class="arrow">▼</div>
+
+                    <!-- 02. Posts -->
+                    <dl class="mb-20">
+                        <dt class="flex aic f2 pointer"
+                            style="cursor: pointer; padding: 10px; background: white; border-radius: 10px; margin-bottom: 5px;">
+                            <div class="num fz16 fw600 lh140 red fxs" style="color: #e53935; margin-right: 15px;">02.
+                            </div>
+                            <div class="name fz18 fz13m fw600 lh120 ttu fxg">Столбы</div>
+                            <div class="arrow tr" style="margin-left: auto;">▼</div>
                         </dt>
-                        <dd>
-                            <ul>
-                                <li>
-                                    <div class="num">2.1</div>
-                                    <div class="parameter">Количество столбов</div>
-                                    <div class="value" id="specPosts">10 шт.</div>
+                        <dd class="fz18 fz13m fw600 lh120 hide_cl"
+                            style="display: none; padding: 20px; background: white; border-radius: 0 0 10px 10px;">
+                            <ul style="list-style: none; padding: 0;">
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Количество столбов</div>
+                                    <div class="value" id="specPostCountDetailed">0 шт.</div>
                                 </li>
-                                <li>
-                                    <div class="num">2.2</div>
-                                    <div class="parameter">Тип столбов</div>
-                                    <div class="value" id="specPostType">Квадратный брус</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Тип столбов</div>
+                                    <div class="value" id="specPostTypeDetailed">--</div>
                                 </li>
-                                <li>
-                                    <div class="num">2.3</div>
-                                    <div class="parameter">Материал столбов</div>
-                                    <div class="value" id="specPostMaterial">Сосна</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Сечение</div>
+                                    <div class="value" id="specPostMaterialDetailed">--</div>
                                 </li>
-                                <li>
-                                    <div class="num">2.4</div>
-                                    <div class="parameter">Высота столбов слева</div>
-                                    <div class="value" id="specHeightLeft">3 000 мм</div>
-                                </li>
-                                <li>
-                                    <div class="num">2.5</div>
-                                    <div class="parameter">Высота столбов справа</div>
-                                    <div class="value" id="specHeightRight">3 000 мм</div>
-                                </li>
-                                <li>
-                                    <div class="num">2.6</div>
-                                    <div class="parameter">Сечение столбов</div>
-                                    <div class="value" id="specPostSection">150 x 150 мм</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Высота столбов</div>
+                                    <div class="value" id="specHeightDetailed">0 мм</div>
                                 </li>
                             </ul>
                         </dd>
                     </dl>
-                    <dl>
-                        <dt class="flex aic f2 pointer">
-                            <div class="num">03.</div>
-                            <div class="name">Фермы</div>
-                            <div class="arrow">▼</div>
+
+                    <!-- 03. Trusses -->
+                    <dl class="mb-20">
+                        <dt class="flex aic f2 pointer"
+                            style="cursor: pointer; padding: 10px; background: white; border-radius: 10px; margin-bottom: 5px;">
+                            <div class="num fz16 fw600 lh140 red fxs" style="color: #e53935; margin-right: 15px;">03.
+                            </div>
+                            <div class="name fz18 fz13m fw600 lh120 ttu fxg">Фермы</div>
+                            <div class="arrow tr" style="margin-left: auto;">▼</div>
                         </dt>
-                        <dd>
-                            <ul>
-                                <li>
-                                    <div class="num">3.1</div>
-                                    <div class="parameter">Количество ферм</div>
-                                    <div class="value" id="specFarms">5 шт.</div>
+                        <dd class="fz18 fz13m fw600 lh120 hide_cl"
+                            style="display: none; padding: 20px; background: white; border-radius: 0 0 10px 10px;">
+                            <ul style="list-style: none; padding: 0;">
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Количество ферм</div>
+                                    <div class="value" id="specTrussCountDetailed">0 шт.</div>
                                 </li>
-                                <li>
-                                    <div class="num">3.2</div>
-                                    <div class="parameter">Материал ферм</div>
-                                    <div class="value" id="specTrussMaterial">Строганая доска 45×190 мм</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Материал ферм</div>
+                                    <div class="value" id="specTrussMaterialDetailed">--</div>
                                 </li>
-                                <li>
-                                    <div class="num">3.3</div>
-                                    <div class="parameter">Длина фермы</div>
-                                    <div class="value" id="specFarmLength">6 000 мм</div>
-                                </li>
-                                <li>
-                                    <div class="num">3.4</div>
-                                    <div class="parameter">Шаг ферм</div>
-                                    <div class="value" id="specTrussSpacing">2 500 мм</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Высота подъема</div>
+                                    <div class="value" id="specRoofHeightDetailed">0 мм</div>
                                 </li>
                             </ul>
                         </dd>
                     </dl>
-                    <dl>
-                        <dt class="flex aic f2 pointer">
-                            <div class="num">04.</div>
-                            <div class="name">Раскосы</div>
-                            <div class="arrow">▼</div>
+                    <!-- 04. Braces -->
+                    <dl class="mb-20">
+                        <dt class="flex aic f2 pointer"
+                            style="cursor: pointer; padding: 10px; background: white; border-radius: 10px; margin-bottom: 5px;">
+                            <div class="num fz16 fw600 lh140 red fxs" style="color: #e53935; margin-right: 15px;">04.
+                            </div>
+                            <div class="name fz18 fz13m fw600 lh120 ttu fxg">Раскосы</div>
+                            <div class="arrow tr" style="margin-left: auto;">▼</div>
                         </dt>
-                        <dd>
-                            <ul>
-                                <li>
-                                    <div class="num">4.1</div>
-                                    <div class="parameter">Количество раскосов</div>
-                                    <div class="value" id="specBraces">20 шт.</div>
+                        <dd class="fz18 fz13m fw600 lh120 hide_cl"
+                            style="display: none; padding: 20px; background: white; border-radius: 0 0 10px 10px;">
+                            <ul style="list-style: none; padding: 0;">
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Тип раскосов</div>
+                                    <div class="value" id="specBraceTypeDetailed">--</div>
                                 </li>
-                                <li>
-                                    <div class="num">4.2</div>
-                                    <div class="parameter">Тип раскосов</div>
-                                    <div class="value" id="specBraceType">Стандартный</div>
-                                </li>
-                                <li>
-                                    <div class="num">4.3</div>
-                                    <div class="parameter">Материал раскосов</div>
-                                    <div class="value" id="specBraceMaterial">Сосна</div>
-                                </li>
-                                <li>
-                                    <div class="num">4.4</div>
-                                    <div class="parameter">Сечение раскосов</div>
-                                    <div class="value">50 x 100 мм</div>
-                                </li>
-                                <li>
-                                    <div class="num">4.5</div>
-                                    <div class="parameter">Длина раскосов</div>
-                                    <div class="value">1 500 мм</div>
+                                <li class="flex aic gap-40"
+                                    style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                                    <div class="parameter" style="color: #666;">Количество</div>
+                                    <div class="value" id="specBraceCountDetailed">0 шт.</div>
                                 </li>
                             </ul>
                         </dd>
                     </dl>
                 </div>
-            </section>
-        </div>
+            </div>
+        </section>
 
-        <!-- ====================================== -->
-        <!-- MVP ARCHITECTURE SCRIPTS              -->
-        <!-- ====================================== -->
+    </div>
 
-        <!-- Модули расширенной функциональности -->
-        <script src="assets/js/storage-manager.js"></script>
-        <script src="assets/js/order-manager.js"></script>
-        <script src="assets/js/pdf-export.js"></script>
+    <!-- SCRIPTS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="./assets/js/jquery-ui-1.14.1/jquery-ui.min.js"></script>
+    <script src="./assets/js/jquery.ui.touch-punch.min.js"></script>
 
-        <!-- MVP Core Components -->
-        <script src="assets/js/mvp/CanopyModel.js"></script>
-        <script src="assets/js/mvp/CanopyView.js"></script>
+    <!-- 3D Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js"></script>
 
-        <!-- Three.js Dependencies -->
-        <script src="assets/libs/three/three.min.js"></script>
-        <script src="assets/libs/three/OrbitControls-wrapper.js"></script>
+    <!-- Application Logic -->
+    <script type="module" src="./assets/js/braces-code-loader.js"></script>
+    <script src="./scripts/EventBus.js"></script>
+    <script src="./scripts/StorageManager.js"></script>
+    <script src="./scripts/OrderManager.js"></script>
+    <script src="./scripts/PDFExporter.js"></script>
+    <script src="./scripts/GeometryHelpers.js"></script>
+    <script src="./scripts/RoofGeometry.js"></script>
+    <script src="./scripts/RoofSystem.js"></script>
+    <script src="./scripts/CanopyModel.js"></script>
+    <script src="./scripts/CanopyRendererV3.js"></script>
+    <script src="./scripts/CanopyView.js"></script>
+    <script src="./scripts/CanopyPresenter.js"></script>
+    <script src="./scripts/CanopyApp.js"></script>
+    <script src="./scripts/LogoManager.js"></script>
 
-        <!-- Проверка загрузки THREE.js библиотек -->
-        <script>
-            console.log('🔍 Проверка загрузки THREE.js библиотек:');
-            console.log('  THREE:', typeof THREE !== 'undefined' ? '✅' : '❌');
-            console.log('  THREE.OrbitControls:', typeof THREE.OrbitControls !== 'undefined' ? '✅' : '❌');
-            console.log('✅ Все необходимые библиотеки THREE.js загружены успешно');
-        </script>
+    <!-- Specification Accordion Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accTriggers = document.querySelectorAll('.specification dt');
+            accTriggers.forEach(trigger => {
+                trigger.addEventListener('click', function () {
+                    const content = this.nextElementSibling;
+                    const arrow = this.querySelector('.arrow');
 
-        <!-- System of parametric roofing (after THREE.js) -->
-        <script src="assets/js/mvp/RoofSystem.js?v=2"></script>
-
-        <!-- Loading braces from code -->
-        <script type="module" src="assets/js/braces-code-loader.js"></script>
-
-        <!-- MVP Renderer & Presenter -->
-        <!-- LogoManager - управление логотипом -->
-        <script src="assets/js/mvp/LogoManager.js?v=9"></script>
-
-        <!-- Use ES module version of V3 Renderer -->
-        <script src="assets/js/mvp/CanopyRendererV3.js?v=12"></script>
-        <script src="assets/js/mvp/CanopyPresenter.js"></script>
-
-        <!-- Функция переключения полноэкранного режима (определяем ДО app.js) -->
-        <script>
-            // Функция переключения полноэкранного режима
-            window.toggleFullscreen3D = function () {
-                const imagesBlock = document.querySelector('.images-block');
-                const calculatorBlock = document.querySelector('.calculator-right-img-block');
-                const canvas = document.querySelector('#nc-canvas');
-                const body = document.body;
-
-                if (!canvas || !imagesBlock || !calculatorBlock) {
-                    console.warn('⚠️ Элементы 3D не найдены');
-                    return;
-                }
-
-                const isFullscreen = body.classList.contains('fullscreen-3d');
-
-                if (!isFullscreen) {
-                    // Вход в полноэкранный режим
-                    body.classList.add('fullscreen-3d');
-                    imagesBlock.classList.add('fullscreen-mode');
-                    calculatorBlock.classList.add('fullscreen-mode');
-                    canvas.style.width = '100vw';
-                    canvas.style.height = '100vh';
-                } else {
-                    // Выход из полноэкранного режима
-                    body.classList.remove('fullscreen-3d');
-                    imagesBlock.classList.remove('fullscreen-mode');
-                    calculatorBlock.classList.remove('fullscreen-mode');
-                    // Возвращаем нормальные размеры
-                    canvas.style.width = '100%';
-                    canvas.style.height = '100%';
-                }
-
-                // Обновляем размеры 3D рендерера с задержкой для применения CSS
-                if (window.CanopyApp && window.CanopyApp.renderer) {
-                    // Используем requestAnimationFrame для более плавного обновления
-                    requestAnimationFrame(() => {
-                        setTimeout(() => {
-                            const renderer = window.CanopyApp.renderer;
-
-                            // Вызываем handleResize для правильного обновления камеры и рендерера
-                            if (renderer.handleResize) {
-                                renderer.handleResize();
-                            }
-
-                            // Принудительно обновляем размеры рендерера
-                            if (renderer.renderer && canvas) {
-                                const container = canvas.parentElement;
-                                if (container) {
-                                    const width = container.clientWidth || window.innerWidth;
-                                    const height = container.clientHeight || window.innerHeight;
-
-                                    // Обновляем размеры рендерера
-                                    renderer.renderer.setSize(width, height, false);
-
-                                    // Обновляем камеру
-                                    if (renderer.camera) {
-                                        renderer.camera.aspect = width / height;
-                                        renderer.camera.updateProjectionMatrix();
-                                    }
-
-                                    // Принудительно перерисовываем сцену
-                                    if (renderer.scene && renderer.camera) {
-                                        renderer.renderer.render(renderer.scene, renderer.camera);
-                                    }
-
-                                    // Устанавливаем флаг для перерисовки
-                                    if (renderer.needsRender !== undefined) {
-                                        renderer.needsRender = true;
-                                    }
-                                }
-                            }
-                        }, 100);
-                    });
-                }
-            };
-        </script>
-
-        <!-- MVP App Initialization -->
-        <script src="assets/js/mvp/app_v2.js?v=2"></script>
-
-        <!-- 🚀 Braces Code Loader - замена GLB на программные копии -->
-        <script type="module" src="assets/js/braces-code-loader.js"></script>
-
-        <script>
-            window.addEventListener('DOMContentLoaded', () => {
-                // MVP архитектура инициализируется автоматически через app.js
-                // Доступ к приложению через window.CanopyApp
-
-                // Создаем обертку для обратной совместимости
-                setTimeout(() => {
-                    if (window.CanopyApp && window.CanopyApp.renderer) {
-                        window.NavesCalc = {
-                            camera: window.CanopyApp.renderer.camera,
-                            controls: window.CanopyApp.renderer.controls,
-                            renderer: window.CanopyApp.renderer.renderer,
-                            scene: window.CanopyApp.renderer.scene,
-                            params: window.CanopyApp.model.params,
-                            currentPostSpacing: window.CanopyApp.model.params.postSpacing / 10,
-                            needsRender: true,
-
-                            update3DModel: () => {
-                                window.CanopyApp.presenter.update3DModelImmediately();
-                            },
-                            calculateTotal: () => {
-                                window.CanopyApp.presenter.calculateAndUpdate();
-                            },
-                            updateSpecification: () => {
-                                window.CanopyApp.presenter.calculateAndUpdate();
-                            },
-                            updateParam: (key, value) => {
-                                window.CanopyApp.model.updateParam(key, value);
-                                window.CanopyApp.presenter.calculateAndUpdate();
-                                window.CanopyApp.presenter.update3DModelDebounced();
-                            },
-                            setQualityLevelManual: (level) => {
-                                if (window.CanopyApp.renderer.setQualityLevel) {
-                                    window.CanopyApp.renderer.setQualityLevel(level);
-                                }
-                            },
-                            qualityLevel: 'high'
-                        };
-                        console.log('✅ Обертка совместимости window.NavesCalc создана');
+                    if (content.style.display === 'none' || content.style.display === '') {
+                        content.style.display = 'block';
+                        if (arrow) arrow.style.transform = 'rotate(180deg)';
+                    } else {
+                        content.style.display = 'none';
+                        if (arrow) arrow.style.transform = 'rotate(0deg)';
                     }
-                }, 500);
+                });
+            });
+        });
+    </script>
 
-                // Инициализация кнопок изменения цвета (3D Overlay)
-                setTimeout(() => {
-                    const colorBtns = document.querySelectorAll('.color-btn-3d');
-                    console.log('🎨 Инициализация кнопок цвета. Найдено:', colorBtns.length);
+    <!-- UI Binding Script -->
+    <script>
+        // Global Order Function
+        window.makeOrder = function () {
+            if (window.CanopyApp && window.CanopyApp.presenter) {
+                window.CanopyApp.presenter.onOrderClicked();
+            } else {
+                console.error('CanopyApp not initialized');
+            }
+        };
 
-                    colorBtns.forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            // Если клик по псевдоэлементу или внутри, находим кнопку
-                            const target = e.target.closest('.color-btn-3d');
-                            if (!target) return;
-
-                            const param = target.dataset.param;
-                            const value = target.dataset.value;
-
-                            console.log(`🎨 Клик по цвету: ${param} = ${value}`);
-
-                            // Снимаем активность с соседей
-                            const row = target.closest('.color-buttons-row');
-                            if (row) {
-                                row.querySelectorAll('.color-btn-3d').forEach(b => b.classList.remove('active'));
-                            }
-
-                            // Активируем текущую
-                            target.classList.add('active');
-
-                            // Обновляем модель
-                            if (window.NavesCalc && window.NavesCalc.updateParam) {
-                                window.NavesCalc.updateParam(param, value);
-                            } else {
-                                console.warn('NavesCalc не готов для обновления цвета');
-                            }
-                        });
-                    });
-                }, 1000); // Даем время на рендеринг DOM
-
-                // Инициализация функциональности сворачивания/разворачивания блоков
-                // Теперь обрабатывается через MVP архитектуру в CanopyView.js
-                // initCollapsibleBlocks(); // Отключено - теперь через MVP
-
-                // Инициализация кнопок (должна быть до синхронизации)
-                initRoofButtons();
-                initSliders();
-
-                // Синхронизация значений по умолчанию
-                syncDefaultValues();
-
-                // Применяем толщину столба на основе сечения
-                setTimeout(() => {
-                    updatePostThickness();
-                }, 100);
-
-                // Инициализация кнопок управления камерой
-                setTimeout(() => {
-                    initCameraControls();
-                }, 600);
-
-                // Оптимизированная инициализация
-                PerformanceOptimizer.optimizeForDevice();
-
-                console.log('✅ MVP Architecture активирована');
-                console.log('📦 Доступ через window.CanopyApp');
+        $(document).ready(function () {
+            // Function to load SVG icons
+            $('[data-svg]').each(function () {
+                var $this = $(this);
+                var src = $this.data('svg');
+                $.get(src, function (data) {
+                    var $svg = $(data).find('svg');
+                    $this.replaceWith($svg);
+                });
             });
 
-            // Функция initCollapsibleBlocks отключена - теперь обрабатывается через MVP архитектуру в CanopyView.js
-            // Обработчики событий для секций "уточнение дизайна" и "уточнение параметров каркаса" 
-            // теперь привязываются в методах bindDesignRefinementEvents() и bindFrameParamsRefinementEvents()
+            // Initialize Sliders
+            $('.has-slider').each(function () {
+                var $el = $(this);
+                var min = parseFloat($el.data('min'));
+                var max = parseFloat($el.data('max'));
+                var val = parseFloat($el.data('value'));
+                var step = parseFloat($el.data('step')) || 1;
+                var param = $el.data('param');
 
-            // Система оптимизации производительности
-            const PerformanceOptimizer = {
-                debounceTimers: new Map(),
-                updateQueue: new Set(),
-
-                // Debounced обновление для слайдеров
-                debouncedUpdate(sliderId, callback, delay = 300) {
-                    // Очищаем предыдущий таймер
-                    if (this.debounceTimers.has(sliderId)) {
-                        clearTimeout(this.debounceTimers.get(sliderId));
+                $el.find('.slider').slider({
+                    range: "min",
+                    min: min,
+                    max: max,
+                    value: val,
+                    step: step,
+                    slide: function (event, ui) {
+                        $el.find('.value span').text(ui.value);
+                        updateParam(param, ui.value);
+                    },
+                    change: function (event, ui) {
+                        updateParam(param, ui.value);
                     }
-
-                    // Устанавливаем новый таймер
-                    const timer = setTimeout(() => {
-                        try {
-                            callback();
-                            this.debounceTimers.delete(sliderId);
-                        } catch (error) {
-                            console.error('Ошибка в debounced обновлении:', error);
-                        }
-                    }, delay);
-
-                    this.debounceTimers.set(sliderId, timer);
-                },
-
-                // Batch обновления для производительности
-                batchUpdate(updateFn) {
-                    this.updateQueue.add(updateFn);
-
-                    // Выполняем обновления в следующем кадре
-                    requestAnimationFrame(() => {
-                        this.updateQueue.forEach(fn => {
-                            try {
-                                fn();
-                            } catch (error) {
-                                console.error('Ошибка в batch обновлении:', error);
-                            }
-                        });
-                        this.updateQueue.clear();
-                    });
-                },
-
-                // Оптимизация для слабых устройств
-                optimizeForDevice() {
-                    const isLowEnd = navigator.hardwareConcurrency <= 2 ||
-                        navigator.deviceMemory <= 4 ||
-                        /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-                    if (isLowEnd) {
-                        console.log('Обнаружено слабое устройство, применяем оптимизации...');
-
-                        // Устанавливаем низкое качество по умолчанию
-                        if (window.NavesCalc) {
-                            window.NavesCalc.qualityLevel = 'low';
-                            window.NavesCalc.setQualityLevelManual('low');
-                        }
-
-                        // Уменьшаем частоту обновлений
-                        this.debounceDelay = 500;
-
-                        // Скрываем панель производительности на мобильных
-                        const panel = document.getElementById('performance-panel');
-                        if (panel && window.innerWidth < 768) {
-                            panel.classList.add('hidden');
-                        }
-                    }
-
-                    return isLowEnd;
-                }
-            };
-
-            function initSliders() {
-                const sliders = document.querySelectorAll('.slider');
-
-                sliders.forEach(slider => {
-                    slider.addEventListener('input', function () {
-                        const valueSpan = this.closest('.has-slider').querySelector('.value span');
-                        if (!valueSpan) return;
-
-                        // Мгновенное обновление отображения
-                        let displayValue = this.value;
-
-                        if (this.id === 'columnStep') {
-                            displayValue = (this.value / 10).toFixed(1);
-                        }
-
-                        valueSpan.textContent = displayValue;
-
-                        // Debounced обновление 3D модели
-                        PerformanceOptimizer.debouncedUpdate(this.id, () => {
-                            try {
-                                updateSliderValue(this);
-                            } catch (error) {
-                                console.error('Ошибка обновления слайдера:', error);
-                                showError('Ошибка обновления параметра');
-                            }
-                        }, PerformanceOptimizer.debounceDelay || 300);
-                    });
                 });
+            });
+
+            // Parameters updater
+            function updateParam(name, value) {
+                if (!name) return;
+
+                // Convert values: New UI is in meters, Internal Logic uses decimeters (x10)
+                // params to convert: length, width, height, roofHeight
+                let internalValue = value;
+                if (['length', 'width', 'height', 'roofHeight', 'postSpacing'].includes(name)) {
+                    internalValue = value * 10;
+                }
+
+                if (window.CanopyApp && window.CanopyApp.presenter) {
+                    window.CanopyApp.presenter.onViewParamChanged(name, internalValue);
+                }
             }
 
-            // Обновление значения слайдера с валидацией
-            function updateSliderValue(slider) {
-                if (!window.NavesCalc) {
-                    console.warn('NavesCalc не доступен');
-                    return;
+            // Bind Radio Buttons (Generic)
+            $('input[type=radio].view-param-input').change(function () {
+                var name = $(this).attr('name');
+                if (name === 'type-stolbi') name = 'postType'; // Map legacy names
+                if (name === 'brace-type') name = 'braceType';
+                updateParam(name, $(this).val());
+            });
+
+            // Bind Select Inputs
+            $('select.view-param-input').change(function () {
+                var name = $(this).attr('id'); // Use ID as param name for selects
+                updateParam(name, $(this).val());
+            });
+
+            // Bind Color Buttons
+            $('.color-btn-3d').click(function () {
+                var $this = $(this);
+                var param = $this.data('param');
+                var value = $this.data('value');
+
+                console.log('🎨 Color button clicked:', param, value);
+
+                // Remove active class ONLY from buttons of the same param
+                $('.color-btn-3d[data-param="' + param + '"]').removeClass('active');
+                $this.addClass('active');
+
+                updateParam(param, value);
+            });
+
+            // Initial Sync
+            setTimeout(function () {
+                // Trigger initial updates if needed
+                if (window.CanopyApp) {
+                    // window.CanopyApp.init(); // Already called in CanopyApp.js likely
                 }
+            }, 500);
+        });
 
-                const value = parseInt(slider.value);
+        // Update Total Price Display
+        document.addEventListener('priceUpdated', function (e) {
+            if (e.detail && e.detail.totalPrice) {
+                $('#totalPrice').text(e.detail.totalPrice.toLocaleString());
+            }
+        });
+    </script>
+    <script>
+        // Init Roof Type Overlay Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const roofBtns = document.querySelectorAll('.roof-type-card');
 
-                // Валидация значений
-                if (isNaN(value) || value < 0) {
-                    console.error('Некорректное значение слайдера:', slider.value);
-                    return;
-                }
+            // 1. Handle Clicks on Overlay Cards
+            roofBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const value = btn.dataset.value;
 
-                try {
-                    switch (slider.id) {
-                        case 'columnStep':
-                            window.NavesCalc.currentPostSpacing = value / 10;
-                            break;
-                        case 'frontBeamExtension':
-                            window.NavesCalc.params.frontBeamExtension = value;
-                            break;
-                        case 'backBeamExtension':
-                            window.NavesCalc.params.backBeamExtension = value;
-                            break;
+                    // Proxy Click to hidden radio
+                    const radio = document.querySelector(`input[name="roofType"][value="${value}"]`);
+                    if (radio) {
+                        radio.click(); // This triggers the calculator's existing listeners
                     }
+                });
+            });
 
-                    // Batch обновление для производительности
-                    PerformanceOptimizer.batchUpdate(() => {
-                        if (window.NavesCalc.update3DModel) {
-                            window.NavesCalc.update3DModel();
-                        }
-                        if (window.NavesCalc.calculateTotal) {
-                            window.NavesCalc.calculateTotal();
-                        }
-                        if (window.NavesCalc.updateSpecification) {
-                            window.NavesCalc.updateSpecification();
-                        }
-                    });
-
-                } catch (error) {
-                    console.error('Ошибка обновления параметра:', error);
-                    showError('Ошибка обновления параметра');
-                }
-            }
-
-            // Система уведомлений об ошибках
-            function showError(message) {
-                // Создаем простое уведомление об ошибке
-                const notification = document.createElement('div');
-                notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #ff4444;
-                color: white;
-                padding: 10px 15px;
-                border-radius: 5px;
-                z-index: 10000;
-                font-size: 14px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            `;
-                notification.textContent = message;
-
-                document.body.appendChild(notification);
-
-                // Автоматически удаляем через 3 секунды
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 3000);
-            }
-
-            // Функция initSelects отключена - теперь обрабатывается через MVP архитектуру в CanopyView.js
-            // Обработчики событий для селектов теперь привязываются в методе bindFormEvents() и bindFrameParamsRefinementEvents()
-
-            // Функция обновления толщины столба на основе сечения столбов
-            function updatePostThickness() {
-                if (!window.NavesCalc || !window.NavesCalc.params) return;
-
-                const postType = window.NavesCalc.params.postType;
-                const postMaterial = window.NavesCalc.params.postMaterial;
-
-                // Применяем толщину для столбов с подпятником или капителью
-                if (postMaterial) {
-                    // Извлекаем размеры из значения postMaterial (например, "glued-150x150" -> 150)
-                    const sizeMatch = postMaterial.match(/(\d+)x(\d+)/);
-                    if (sizeMatch) {
-                        const width = parseFloat(sizeMatch[1]);
-                        const height = parseFloat(sizeMatch[2]);
-
-                        // Сохраняем размеры для использования в NavesCalc
-                        window.NavesCalc.params.postWidth = width / 1000; // конвертируем в метры
-                        window.NavesCalc.params.postDepth = height / 1000; // конвертируем в метры
-
-                        // Параметры подпятника (для var-5, var-4)
-                        const footOverhang = 40; // выступ с каждой стороны в мм
-                        const footThickness = 40; // толщина пятки в мм
-
-                        // Параметры капители (для var-3, var-4)
-                        const capitalOverhang = 50; // расширение с каждой стороны в мм
-                        const capitalThickness = 80; // высота капители в мм
-
-                        if (postType === 'var-5' || postType === 'var-4') {
-                            window.NavesCalc.params.postFootWidth = (width + footOverhang * 2) / 1000; // в метрах
-                            window.NavesCalc.params.postFootDepth = (height + footOverhang * 2) / 1000; // в метрах
-                            window.NavesCalc.params.postFootHeight = footThickness / 1000; // в метрах
-                            console.log(`Подпятник столба ${postType}: ${width + footOverhang * 2}x${height + footOverhang * 2}x${footThickness} мм`);
-                        }
-
-                        if (postType === 'var-3' || postType === 'var-4') {
-                            window.NavesCalc.params.postCapitalWidth = (width + capitalOverhang * 2) / 1000; // в метрах
-                            window.NavesCalc.params.postCapitalDepth = (height + capitalOverhang * 2) / 1000; // в метрах
-                            window.NavesCalc.params.postCapitalHeight = capitalThickness / 1000; // в метрах
-                            console.log(`Капитель столба ${postType}: ${width + capitalOverhang * 2}x${height + capitalOverhang * 2}x${capitalThickness} мм`);
-                        }
-
-                        console.log(`Сечение столба ${postType}: ${width}x${height} мм`);
-                    }
-                }
-            }
-
-            // Функция initRadioButtons отключена - теперь обрабатывается через MVP архитектуру в CanopyView.js
-            // Обработчики событий для радиокнопок выбора столбов теперь привязываются в методе bindDesignRefinementEvents()
-
-            // Инициализация кнопок выбора кровли (3D Overlay)
-            function initRoofButtons() {
-                const roofBtns = document.querySelectorAll('.roof-type-card');
-
-                roofBtns.forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        // Находим карточку
-                        const target = e.target.closest('.roof-type-card');
-                        if (!target) return;
-
-                        const value = target.dataset.value;
-
-                        // Снимаем активность
+            // 2. Sync Overlay State with Radio Inputs (in case changed elsewhere or logic updates)
+            const radioInputs = document.querySelectorAll('input[name="roofType"]');
+            radioInputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    if (input.checked) {
+                        // Update active class on overlay
                         roofBtns.forEach(b => b.classList.remove('active'));
-                        target.classList.add('active');
-
-                        console.log('🏠 Выбран тип кровли (3D):', value);
-
-                        if (window.NavesCalc && window.NavesCalc.updateParam) {
-                            window.NavesCalc.updateParam('roofType', value);
-                        }
-                    });
-                });
-
-                // Функция обновления UI при изменении параметров извне
-                window.updateRoofTypeUI = function (type) {
-                    roofBtns.forEach(b => {
-                        if (b.dataset.value === type) b.classList.add('active');
-                        else b.classList.remove('active');
-                    });
-                };
-
-                // --- Инициализация кнопок выбора материала кровли (3D Overlay) ---
-                const materialCards = document.querySelectorAll('.material-card');
-
-                // Функция обновления UI материалов
-                window.updateRoofingMaterialUI = function (value) {
-                    materialCards.forEach(card => {
-                        if (card.dataset.value === value) {
-                            card.classList.add('active');
-                        } else {
-                            card.classList.remove('active');
-                        }
-                    });
-                };
-
-                materialCards.forEach(card => {
-                    card.addEventListener('click', () => {
-                        const value = card.dataset.value;
-
-                        // Обновляем визуальное состояние сразу
-                        window.updateRoofingMaterialUI(value);
-
-                        console.log('🏗 Выбран материал кровли (3D):', value);
-
-                        // Обновляем модель
-                        if (window.NavesCalc && window.NavesCalc.updateParam) {
-                            window.NavesCalc.updateParam('roofingMaterial', value);
-                        }
-                    });
-                });
-            }
-
-            function syncDefaultValues() {
-                // Синхронизируем значения по умолчанию с HTML элементами
-                if (window.NavesCalc) {
-                    const params = window.NavesCalc.params;
-
-                    // Устанавливаем значения для селектов
-                    const frameMaterialSelect = document.getElementById('frameMaterial');
-                    if (frameMaterialSelect) {
-                        frameMaterialSelect.value = params.frameMaterial || 'pine';
-                    }
-
-                    const postMaterialSelect = document.getElementById('postMaterial');
-                    if (postMaterialSelect) {
-                        postMaterialSelect.value = params.postMaterial || 'glued-150x150';
-                    }
-
-                    const trussMaterialSelect = document.getElementById('trussMaterial');
-                    if (trussMaterialSelect) {
-                        trussMaterialSelect.value = params.trussMaterial || 'planed-45x190';
-                    }
-
-                    const braceTypeSelect = document.getElementById('braceType');
-                    if (braceTypeSelect) {
-                        braceTypeSelect.value = params.braceType || 'var-1';
-                    }
-
-                    const frameColoringSelect = document.getElementById('frameColoring');
-                    if (frameColoringSelect) {
-                        frameColoringSelect.value = params.frameColoring || 'no-coloring';
-                    }
-
-                    const roofingMaterialSelect = document.getElementById('roofingMaterial');
-                    if (roofingMaterialSelect) {
-                        roofingMaterialSelect.value = params.roofingMaterial || 'metal-grandline';
-                    }
-
-                    const roofColorSelect = document.getElementById('roofColor');
-                    if (roofColorSelect) {
-                        roofColorSelect.value = params.roofColor || 'amber';
-                    }
-
-                    // Устанавливаем значения для слайдеров
-                    const columnStepSlider = document.getElementById('columnStep');
-                    if (columnStepSlider) {
-                        columnStepSlider.value = (params.postSpacing || 25) * 10; // конвертируем в дециметры
-                        const valueSpan = columnStepSlider.closest('.has-slider').querySelector('.value span');
-                        if (valueSpan) {
-                            valueSpan.textContent = (params.postSpacing || 25) / 10;
-                        }
-                    }
-
-                    const frontBeamExtensionSlider = document.getElementById('frontBeamExtension');
-                    if (frontBeamExtensionSlider) {
-                        frontBeamExtensionSlider.value = params.frontBeamExtension || 200;
-                        const valueSpan = frontBeamExtensionSlider.closest('.has-slider').querySelector('.value span');
-                        if (valueSpan) {
-                            valueSpan.textContent = params.frontBeamExtension || 200;
-                        }
-                    }
-
-                    const backBeamExtensionSlider = document.getElementById('backBeamExtension');
-                    if (backBeamExtensionSlider) {
-                        backBeamExtensionSlider.value = params.backBeamExtension || 200;
-                        const valueSpan = backBeamExtensionSlider.closest('.has-slider').querySelector('.value span');
-                        if (valueSpan) {
-                            valueSpan.textContent = params.backBeamExtension || 200;
-                        }
-                    }
-
-                    // Устанавливаем выбранный тип столба
-                    const postType = params.postType || 'var-5';
-                    const postRadio = document.getElementById(`type-stolbi-${postType}`);
-                    if (postRadio) {
-                        postRadio.checked = true;
-                    }
-
-                    // Sync 3D Roof Buttons
-                    if (window.updateRoofTypeUI) {
-                        window.updateRoofTypeUI(params.roofType || 'var-2');
-                    }
-                }
-            }
-
-            function initCameraControls() {
-                // Стандартное управление мышью (OrbitControls)
-            }
-
-            const orderManager = new OrderManager('/api/orders'); // Настройте путь к вашему API
-            const pdfExporter = new PDFExporter();
-
-            // Функция получения текущих данных расчета
-            function getCurrentCalculationData() {
-                const params = window.NavesCalc ? window.NavesCalc.params : {};
-                const totalPrice = document.getElementById('totalPrice')?.textContent || '0 ₽';
-
-                return {
-                    // Основные параметры
-                    length: params.length ? params.length / 10 : 0, // конвертируем в метры
-                    width: params.width ? params.width / 10 : 0,
-                    height: params.height ? params.height / 10 : 0,
-                    roofHeight: params.roofHeight ? params.roofHeight / 10 : 0,
-                    area: params.length && params.width ? (params.length * params.width / 100).toFixed(2) : 0,
-
-                    // Типы и материалы
-                    roofType: params.roofType || 'var-2',
-                    postType: params.postType || 'var-5',
-                    braceType: params.braceType || 'var-1',
-                    postMaterial: params.postMaterial || 'glued-150x150',
-                    trussMaterial: params.trussMaterial || 'planed-45x190',
-                    roofingMaterial: params.roofingMaterial || 'metal-grandline',
-                    roofColor: params.roofColor || 'amber',
-                    frameMaterial: params.frameMaterial || 'pine',
-                    frameColoring: params.frameColoring || 'no-coloring',
-
-                    // Дополнительно
-                    postSpacing: params.postSpacing ? params.postSpacing / 10 : 2.5,
-                    frontBeamExtension: params.frontBeamExtension || 200,
-                    backBeamExtension: params.backBeamExtension || 200,
-                    mountingRequired: params.mountingRequired || 'yes',
-                    distanceFromMKAD: params.distanceFromMKAD || 10,
-
-                    // Итоговая стоимость
-                    totalPrice: totalPrice,
-                    timestamp: Date.now(),
-                    date: new Date().toLocaleString('ru-RU')
-                };
-            }
-
-            // Функция заказа
-            window.makeOrder = function () {
-                try {
-                    const calculationData = getCurrentCalculationData();
-                    const orderForm = orderManager.createOrderForm(calculationData);
-                    document.body.appendChild(orderForm);
-                } catch (error) {
-                    console.error('Ошибка при создании формы заказа:', error);
-                    alert('Произошла ошибка при открытии формы заказа. Попробуйте позже.');
-                }
-            };
-
-            // Функция сохранения расчета
-            window.saveCalculation = function () {
-                try {
-                    const calculationData = getCurrentCalculationData();
-
-                    // Запрашиваем название для расчета
-                    const name = prompt('Введите название для расчета:', `Навес ${calculationData.length}×${calculationData.width}м`);
-
-                    if (name !== null) { // Пользователь не нажал "Отмена"
-                        const calcId = storageManager.saveCalculation(calculationData, name || undefined);
-
-                        // Показываем уведомление об успехе
-                        showNotification('✅ Расчет сохранен!', 'success');
-
-                        // Обновляем список истории, если панель открыта
-                        updateHistoryPanel();
-                    }
-                } catch (error) {
-                    console.error('Ошибка при сохранении расчета:', error);
-                    showNotification('❌ Ошибка при сохранении расчета', 'error');
-                }
-            };
-
-            // Функция экспорта в PDF
-            window.exportToPDF = function () {
-                try {
-                    const calculationData = getCurrentCalculationData();
-                    const filename = `naves_${calculationData.length}x${calculationData.width}m_${Date.now()}.pdf`;
-
-                    showNotification('⏳ Генерация PDF...', 'info');
-
-                    pdfExporter.exportToPDF(calculationData, filename).then(() => {
-                        showNotification('✅ PDF успешно создан!', 'success');
-                    }).catch((error) => {
-                        console.error('Ошибка при экспорте PDF:', error);
-                        showNotification('❌ Ошибка при создании PDF', 'error');
-                    });
-                } catch (error) {
-                    console.error('Ошибка при экспорте PDF:', error);
-                    showNotification('❌ Ошибка при экспорте PDF', 'error');
-                }
-            };
-
-            // Функция загрузки сохраненного расчета
-            window.loadSavedCalculation = function (calcId) {
-                try {
-                    const calculationData = storageManager.loadCalculation(calcId);
-
-                    if (calculationData && window.NavesCalc) {
-                        // Применяем сохраненные параметры
-                        const params = calculationData;
-
-                        // Обновляем параметры калькулятора
-                        if (params.length) window.NavesCalc.updateParam('length', params.length * 10); // конвертируем обратно в дециметры
-                        if (params.width) window.NavesCalc.updateParam('width', params.width * 10);
-                        if (params.height) window.NavesCalc.updateParam('height', params.height * 10);
-                        if (params.roofHeight) window.NavesCalc.updateParam('roofHeight', params.roofHeight * 10);
-                        if (params.roofType) window.NavesCalc.updateParam('roofType', params.roofType);
-                        if (params.postType) window.NavesCalc.updateParam('postType', params.postType);
-                        if (params.braceType) window.NavesCalc.updateParam('braceType', params.braceType);
-                        if (params.postMaterial) window.NavesCalc.updateParam('postMaterial', params.postMaterial);
-                        if (params.trussMaterial) window.NavesCalc.updateParam('trussMaterial', params.trussMaterial);
-                        if (params.roofingMaterial) window.NavesCalc.updateParam('roofingMaterial', params.roofingMaterial);
-                        if (params.roofColor) window.NavesCalc.updateParam('roofColor', params.roofColor);
-
-                        showNotification('✅ Расчет загружен!', 'success');
-                    } else {
-                        showNotification('❌ Расчет не найден', 'error');
-                    }
-                } catch (error) {
-                    console.error('Ошибка при загрузке расчета:', error);
-                    showNotification('❌ Ошибка при загрузке расчета', 'error');
-                }
-            };
-
-            // Функция удаления расчета
-            window.deleteSavedCalculation = function (calcId) {
-                if (confirm('Вы уверены, что хотите удалить этот расчет?')) {
-                    try {
-                        storageManager.deleteCalculation(calcId);
-                        updateHistoryPanel();
-                        showNotification('✅ Расчет удален', 'success');
-                    } catch (error) {
-                        console.error('Ошибка при удалении расчета:', error);
-                        showNotification('❌ Ошибка при удалении', 'error');
-                    }
-                }
-            };
-
-            // Функция обновления панели истории
-            window.updateHistoryPanel = function () {
-                const historyPanel = document.getElementById('history-panel');
-                if (!historyPanel) return;
-
-                const calculations = storageManager.getAllCalculations();
-                const historyList = historyPanel.querySelector('.history-list');
-
-                if (!historyList) return;
-
-                if (calculations.length === 0) {
-                    historyList.innerHTML = '<p style="text-align: center; color: #999;">Нет сохраненных расчетов</p>';
-                    return;
-                }
-
-                historyList.innerHTML = calculations.map(calc => `
-                    <div class="history-item" data-id="${calc.id}">
-                        <div class="history-item-header">
-                            <strong>${calc.name}</strong>
-                            <span class="history-item-date">${new Date(calc.timestamp).toLocaleString('ru-RU')}</span>
-                        </div>
-                        <div class="history-item-details">
-                            ${calc.data.length}×${calc.data.width}м, ${calc.data.totalPrice}
-                        </div>
-                        <div class="history-item-actions">
-                            <button onclick="loadSavedCalculation('${calc.id}')" class="btn-small btn-primary">Загрузить</button>
-                            <button onclick="deleteSavedCalculation('${calc.id}')" class="btn-small btn-danger">Удалить</button>
-                        </div>
-                    </div>
-                `).join('');
-            };
-
-            // Функция показа уведомлений
-            function showNotification(message, type = 'info') {
-                const notification = document.createElement('div');
-                notification.className = `notification notification-${type}`;
-                notification.textContent = message;
-                notification.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    padding: 15px 25px;
-                    background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
-                    color: white;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                    z-index: 10000;
-                    font-size: 14px;
-                    animation: slideIn 0.3s ease;
-                `;
-
-                document.body.appendChild(notification);
-
-                setTimeout(() => {
-                    notification.style.animation = 'slideOut 0.3s ease';
-                    setTimeout(() => notification.remove(), 300);
-                }, 3000);
-            }
-
-            // Добавляем стили для анимации уведомлений
-            if (!document.getElementById('notification-styles')) {
-                const style = document.createElement('style');
-                style.id = 'notification-styles';
-                style.textContent = `
-                    @keyframes slideIn {
-                        from { transform: translateX(400px); opacity: 0; }
-                        to { transform: translateX(0); opacity: 1; }
-                    }
-                    @keyframes slideOut {
-                        from { transform: translateX(0); opacity: 1; }
-                        to { transform: translateX(400px); opacity: 0; }
-                    }
-                    .history-item {
-                        padding: 15px;
-                        margin-bottom: 10px;
-                        background: #f5f5f5;
-                        border-radius: 8px;
-                        border-left: 4px solid #20B5B9;
-                    }
-                    .history-item-header {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-bottom: 8px;
-                    }
-                    .history-item-date {
-                        color: #999;
-                        font-size: 12px;
-                    }
-                    .history-item-details {
-                        color: #666;
-                        font-size: 14px;
-                        margin-bottom: 10px;
-                    }
-                    .history-item-actions {
-                        display: flex;
-                        gap: 10px;
-                    }
-                    .btn-small {
-                        padding: 6px 12px;
-                        font-size: 12px;
-                        border: none;
-                        border-radius: 4px;
-                        cursor: pointer;
-                    }
-                    .btn-primary {
-                        background: #20B5B9;
-                        color: white;
-                    }
-                    .btn-danger {
-                        background: #f44336;
-                        color: white;
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-
-            // Функция скачивания 3D изображения
-            window.download3DImage = function () {
-                if (window.NavesCalc && window.NavesCalc.renderer) {
-                    // Создаем ссылку для скачивания
-                    const canvas = window.NavesCalc.renderer.domElement;
-                    const link = document.createElement('a');
-                    link.download = 'naves-3d-model.png';
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                } else {
-                    alert('3D модель не готова для скачивания');
-                }
-            };
-        </script>
-
-        <script>
-            // Экспортируем менеджеры для отладки
-            window.PerformanceOptimizer = PerformanceOptimizer;
-
-            // ОБРАБОТЧИКИ ДЛЯ ОТЛАДОЧНЫХ КНОПОК
-            function initDebugButtons() {
-                console.log('=== ИНИЦИАЛИЗАЦИЯ ОТЛАДОЧНЫХ КНОПОК ===');
-
-                // Обработчики для отладочных кнопок выбора столбов
-                const debugStolbiRadios = document.querySelectorAll('input[name="type-stolbi"]');
-
-                console.log('Найдено отладочных радиокнопок столбов:', debugStolbiRadios.length);
-
-                debugStolbiRadios.forEach(radio => {
-                    radio.addEventListener('change', function () {
-                        if (this.checked && window.NavesCalc) {
-                            window.NavesCalc.params.postType = this.value;
-                            console.log('Выбран тип столба (отладка):', this.value);
-                            updatePostThickness(); // Обновляем толщину столба
-                            window.NavesCalc.update3DModel();
-                            window.NavesCalc.calculateTotal();
-                            updateDebugInfo(); // Обновляем отладочную информацию
-                        }
-                    });
-                });
-            }
-
-            // Обновление отладочной информации
-            function updateDebugInfo() {
-                if (window.NavesCalc && window.NavesCalc.params) {
-                    const price = window.NavesCalc.calculateTotal();
-                    const dimensions = `${window.NavesCalc.params.length}x${window.NavesCalc.params.width} м`;
-                    const height = `${window.NavesCalc.params.height} м`;
-
-                    // Определяем размер продольных балок (мауэрлатов) в зависимости от типа столба
-                    const postType = window.NavesCalc.params.postType;
-                    let longitudinalBeamSize;
-                    if (postType === 'var-1' || postType === 'var-5') {
-                        longitudinalBeamSize = '200×200 мм';
-                    } else {
-                        // Для var-2, var-3, var-4 используем сечение столбов
-                        const postMaterial = window.NavesCalc.params.postMaterial;
-                        const match = postMaterial.match(/(\d+)x(\d+)/);
-                        if (match) {
-                            longitudinalBeamSize = `${match[1]}×${match[2]} мм`;
-                        } else {
-                            longitudinalBeamSize = '150×150 мм';
-                        }
-                    }
-
-                    const priceEl = document.getElementById('debug-total-price');
-                    const dimensionsEl = document.getElementById('debug-dimensions');
-                    const heightEl = document.getElementById('debug-height');
-                    const longitudinalBeamEl = document.getElementById('debug-longitudinal-beam');
-
-                    if (priceEl) priceEl.textContent = price.toLocaleString() + ' ₽';
-                    if (dimensionsEl) dimensionsEl.textContent = dimensions;
-                    if (heightEl) heightEl.textContent = height;
-                    if (longitudinalBeamEl) longitudinalBeamEl.textContent = longitudinalBeamSize;
-                }
-            }
-
-            // Функция выбора сечения балок
-            window.selectBeam = function (element, value) {
-                console.log('🔨 Выбор сечения балок:', value);
-
-                // Убираем выделение со всех элементов
-                const allBeamItems = document.querySelectorAll('.debug-beam-item');
-                allBeamItems.forEach(item => item.classList.remove('selected'));
-
-                // Выделяем выбранный элемент
-                element.classList.add('selected');
-
-                // Отмечаем radio кнопку
-                const radio = element.querySelector('input[type="radio"]');
-                if (radio) {
-                    radio.checked = true;
-                }
-
-                // Обновляем значение через MVP Presenter (правильный способ)
-                if (window.CanopyApp && window.CanopyApp.presenter) {
-                    console.log('✅ Обновление через CanopyApp.presenter');
-
-                    // Обновляем через Presenter - это правильно обновит Model, View и Renderer
-                    window.CanopyApp.presenter.onViewParamChanged('trussMaterial', value);
-
-                    console.log('Текущие параметры:', window.CanopyApp.model.params);
-
-                    // Обновляем отображение в информационном блоке
-                    const beamSectionEl = document.getElementById('debug-beam-section');
-                    const sizeText = element.querySelector('.debug-beam-size').textContent;
-                    if (beamSectionEl) {
-                        beamSectionEl.textContent = sizeText;
-                    }
-
-                    // Также обновляем скрытый селект для синхронизации
-                    const trussMaterialSelect = document.getElementById('trussMaterial');
-                    if (trussMaterialSelect) {
-                        trussMaterialSelect.value = value;
-                    }
-
-                    console.log('✅ Сечение балок обновлено через MVP');
-                } else {
-                    console.error('❌ CanopyApp.presenter не найден');
-                }
-
-                console.log('Выбрано сечение балок (trussMaterial):', value);
-            };
-
-            // Функция выбора типа ферм (форма кровли)
-            window.selectTrussType = function (element, value) {
-                console.log('🏗️ Выбор типа ферм:', value);
-
-                // Убираем выделение со всех элементов
-                const allTrussItems = document.querySelectorAll('.debug-truss-item');
-                allTrussItems.forEach(item => {
-                    item.style.border = '2px solid #ddd';
-                    item.style.background = 'transparent';
-                });
-
-                // Выделяем выбранный элемент
-                element.style.border = '2px solid #20B5B9';
-                element.style.background = '#f0fbfb';
-
-                // Отмечаем radio кнопку
-                const radio = element.querySelector('input[type="radio"]');
-                if (radio) {
-                    radio.checked = true;
-                }
-
-                // Обновляем значение через MVP Presenter (правильный способ)
-                if (window.CanopyApp && window.CanopyApp.presenter) {
-                    console.log('✅ Обновление через CanopyApp.presenter');
-
-                    // ВАЖНО: параметр называется roofType, не trussType!
-                    window.CanopyApp.presenter.onViewParamChanged('roofType', value);
-
-                    console.log('Текущие параметры:', window.CanopyApp.model.params);
-
-                    // Обновляем все радиокнопки типа ферм
-                    const trussTypeRadios = document.querySelectorAll('input[name="type-karkas"]');
-                    trussTypeRadios.forEach(radio => {
-                        if (radio.value === value) {
-                            radio.checked = true;
-                        }
-                    });
-
-                    // Также обновляем радиокнопки в основном интерфейсе MVP
-                    const mvpRoofRadios = document.querySelectorAll('.nc-radio__input[name="type-karkas"]');
-                    mvpRoofRadios.forEach(radio => {
-                        if (radio.value === value) {
-                            radio.checked = true;
-                        }
-                    });
-
-                    console.log('✅ Тип ферм обновлен через MVP');
-                } else {
-                    console.error('❌ CanopyApp.presenter не найден');
-                }
-
-                console.log('Выбран тип ферм (roofType):', value);
-            };
-
-            // Функция выбора типа раскосов
-            window.selectBraceType = function (element, value) {
-                console.log('🔧 Выбор раскоса:', value);
-
-                // Убираем выделение со всех элементов
-                const allBraceItems = document.querySelectorAll('.debug-brace-item');
-                allBraceItems.forEach(item => {
-                    item.style.border = '2px solid #ddd';
-                    item.style.background = 'transparent';
-                });
-
-                // Выделяем выбранный элемент
-                element.style.border = '2px solid #20B5B9';
-                element.style.background = '#f0fbfb';
-
-                // Отмечаем radio кнопку
-                const radio = element.querySelector('input[type="radio"]');
-                if (radio) {
-                    radio.checked = true;
-                }
-
-                // Обновляем значение через MVP Presenter (правильный способ)
-                if (window.CanopyApp && window.CanopyApp.presenter) {
-                    console.log('✅ Обновление через CanopyApp.presenter');
-
-                    // Обновляем через Presenter - это правильно обновит Model, View и Renderer
-                    window.CanopyApp.presenter.onViewParamChanged('braceType', value);
-
-                    console.log('Текущие параметры:', window.CanopyApp.model.params);
-
-                    // Обновляем радиокнопки в основном интерфейсе MVP
-                    const mvpBraceRadios = document.querySelectorAll('.nc-brace__input');
-                    mvpBraceRadios.forEach(radio => {
-                        if (radio.value === value) {
-                            radio.checked = true;
-                            // Обновляем визуальное выделение в MVP интерфейсе
-                            const label = radio.nextElementSibling;
-                            if (label) {
-                                const allLabels = document.querySelectorAll('.nc-brace-item label');
-                                allLabels.forEach(l => {
-                                    l.style.borderColor = '#e2e8f0';
-                                    l.style.background = '#f7fafc';
-                                });
-                                label.style.borderColor = '#20B5B9';
-                                label.style.background = 'rgba(32, 181, 185, 0.1)';
-                            }
-                        }
-                    });
-
-                    console.log('✅ Раскос обновлен через MVP');
-                } else {
-                    console.error('❌ CanopyApp.presenter не найден');
-                }
-
-                console.log('Выбран тип раскосов:', value);
-            };
-
-            // Инициализация выбора балок по умолчанию при загрузке
-            function initBeamSelection() {
-                const defaultBeamItem = document.querySelector('.debug-beam-item input[checked]');
-                if (defaultBeamItem) {
-                    const parent = defaultBeamItem.closest('.debug-beam-item');
-                    if (parent) {
-                        parent.classList.add('selected');
-                    }
-                }
-            }
-
-            // Инициализация выбора раскосов по умолчанию при загрузке
-            function initBraceSelection() {
-                console.log('🔧 Инициализация выбора раскосов...');
-
-                // Получаем текущий тип раскоса из NavesCalc
-                let currentBraceType = 'var-1'; // по умолчанию
-                if (window.NavesCalc && window.NavesCalc.params && window.NavesCalc.params.braceType) {
-                    currentBraceType = window.NavesCalc.params.braceType;
-                }
-
-                console.log('Текущий тип раскоса:', currentBraceType);
-
-                // Выделяем соответствующий элемент в отладочном интерфейсе
-                const allBraceItems = document.querySelectorAll('.debug-brace-item');
-                allBraceItems.forEach(item => {
-                    const radio = item.querySelector('input[type="radio"]');
-                    if (radio && radio.value === currentBraceType) {
-                        item.style.border = '2px solid #20B5B9';
-                        item.style.background = '#f0fbfb';
-                        radio.checked = true;
-                        console.log('✅ Выделен раскос:', currentBraceType);
-                    } else {
-                        item.style.border = '2px solid #ddd';
-                        item.style.background = 'transparent';
+                        const activeBtn = document.querySelector(`.roof-type-card[data-value="${input.value}"]`);
+                        if (activeBtn) activeBtn.classList.add('active');
                     }
                 });
-            }
+            });
 
-            // ФУНКЦИИ ДЛЯ БЕГУНКОВ (ПАРАМЕТРЫ КОНСТРУКЦИИ)
-            function updateLength(value) {
-                const meters = value / 10;
-                document.getElementById('length-value').textContent = meters.toFixed(1) + ' м';
-                if (window.NavesCalc) {
-                    window.NavesCalc.params.length = parseInt(value);
-                    window.NavesCalc.update3DModel();
-                    window.NavesCalc.calculateTotal();
-                    updateDebugInfo();
-                }
+            // 3. Set Initial State
+            const checkedRadio = document.querySelector('input[name="roofType"]:checked');
+            if (checkedRadio) {
+                const activeBtn = document.querySelector(`.roof-type-card[data-value="${checkedRadio.value}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
             }
-
-            function updateWidth(value) {
-                const meters = value / 10;
-                document.getElementById('width-value').textContent = meters.toFixed(1) + ' м';
-                if (window.NavesCalc) {
-                    window.NavesCalc.params.width = parseInt(value);
-                    window.NavesCalc.update3DModel();
-                    window.NavesCalc.calculateTotal();
-                    updateDebugInfo();
-                }
-            }
-
-            function updateHeight(value) {
-                const meters = value / 10;
-                document.getElementById('height-value').textContent = meters.toFixed(1) + ' м';
-                if (window.NavesCalc) {
-                    window.NavesCalc.params.height = parseInt(value);
-                    window.NavesCalc.update3DModel();
-                    window.NavesCalc.calculateTotal();
-                    updateDebugInfo();
-                }
-            }
-
-            function updateRoofHeight(value) {
-                const meters = value / 10;
-                document.getElementById('roof-height-value').textContent = meters.toFixed(1) + ' м';
-                if (window.NavesCalc) {
-                    window.NavesCalc.params.roofHeight = parseInt(value);
-                    window.NavesCalc.update3DModel();
-                    window.NavesCalc.calculateTotal();
-                    updateDebugInfo();
-                }
-            }
-
-            function updatePostSpacing(value) {
-                const meters = value / 10;
-                document.getElementById('post-spacing-value').textContent = meters.toFixed(1) + ' м';
-                if (window.NavesCalc) {
-                    window.NavesCalc.params.postSpacing = parseInt(value);
-                    window.NavesCalc.update3DModel();
-                    window.NavesCalc.calculateTotal();
-                    updateDebugInfo();
-                }
-            }
-
-            // Инициализация выбора типа ферм по умолчанию при загрузке
-            function initTrussSelection() {
-                const defaultTrussItem = document.querySelector('.debug-truss-item input[checked]');
-                if (defaultTrussItem) {
-                    const parent = defaultTrussItem.closest('.debug-truss-item');
-                    if (parent) {
-                        parent.style.border = '2px solid #20B5B9';
-                        parent.style.background = '#f0fbfb';
-                    }
-                }
-            }
-        </script>
-
+        });
+    </script>
 </body>
 
 </html>
